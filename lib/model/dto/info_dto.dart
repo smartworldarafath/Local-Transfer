@@ -10,8 +10,7 @@ class InfoDto with _$InfoDto {
     required String alias,
     required String? deviceModel,
 
-    // ignore: invalid_annotation_target
-    @JsonKey(unknownEnumValue: DeviceType.desktop)
+    @JsonKey(unknownEnumValue: DeviceType.desktop) // ignore: invalid_annotation_target
     required DeviceType deviceType,
   }) = _InfoDto;
 
