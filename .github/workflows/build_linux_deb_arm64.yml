@@ -1,7 +1,8 @@
-name: Build arm64 tar
+name: Build linux arm64 deb
 
 on:
   workflow_dispatch:
+  workflow_call:
 
 env:
   FLUTTER_VERSION: "3.41.9"
@@ -21,7 +22,7 @@ jobs:
           VERSION=$(sed -n 's/^version: \([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p' app/pubspec.yaml)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-  build_tar_arm_64:
+  build_deb_arm_64:
     needs: build
     runs-on: ubuntu-22.04-arm
 
@@ -49,21 +50,30 @@ jobs:
         working-directory: packages/localsend_isolates
         run: rustup show
 
-      - name: Dependencies
-        working-directory: app
-        run: flutter pub get
+      - name: Enable dart_distributor
+        run: dart pub global activate flutter_distributor
 
-      - name: Compile linux
+      - name: Build deb package
         working-directory: app
-        run: flutter build linux
+        run: PATH="$PATH:$HOME/.pub-cache/bin" flutter_distributor package --platform linux --targets deb
 
-      - name: Create tar.gz archive
+      - name: Find deb file
+        id: find_deb
         run: |
-          cd app/build/linux/arm64/release/bundle
-          tar -czvf ../../../../../result.tar.gz *
+          VERSION=${{ needs.build.outputs.version }}
+          DEB_PATH=$(find app/dist -name "localsend_app-$VERSION*-linux.deb")
+          echo "deb_path=$DEB_PATH" >> $GITHUB_OUTPUT
 
-      - name: Upload tar.gz archive
+      - name: Check if deb file exists
+        id: check_file
+        run: |
+          if [[ ! -f "${{ steps.find_deb.outputs.deb_path }}" ]]; then
+            echo "File not found: ${{ steps.find_deb.outputs.deb_path }}"
+            exit 1
+          fi
+
+      - name: Upload deb file
         uses: actions/upload-artifact@v6
         with:
-          name: tar-gz-arm-64-result
-          path: ./app/*.tar.gz
+          name: deb-arm-64-result
+          path: ${{ steps.find_deb.outputs.deb_path }}

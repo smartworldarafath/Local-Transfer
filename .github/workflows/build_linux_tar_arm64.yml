@@ -1,7 +1,8 @@
-name: Build arm64 deb
+name: Build linux arm64 tar
 
 on:
   workflow_dispatch:
+  workflow_call:
 
 env:
   FLUTTER_VERSION: "3.41.9"
@@ -21,7 +22,7 @@ jobs:
           VERSION=$(sed -n 's/^version: \([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p' app/pubspec.yaml)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-  build_deb_arm_64:
+  build_tar_arm_64:
     needs: build
     runs-on: ubuntu-22.04-arm
 
@@ -49,41 +50,21 @@ jobs:
         working-directory: packages/localsend_isolates
         run: rustup show
 
-      - name: Enable dart_distributor
-        run: dart pub global activate flutter_distributor
-
-      - name: Build deb package
+      - name: Dependencies
         working-directory: app
-        run: PATH="$PATH:$HOME/.pub-cache/bin" flutter_distributor package --platform linux --targets deb
+        run: flutter pub get
 
-      - name: Find deb file
-        id: find_deb
+      - name: Compile linux
+        working-directory: app
+        run: flutter build linux
+
+      - name: Create tar.gz archive
         run: |
-          VERSION=${{ needs.build.outputs.version }}
-          DEB_PATH=$(find app/dist -name "localsend_app-$VERSION*-linux.deb")
-          echo "deb_path=$DEB_PATH" >> $GITHUB_OUTPUT
+          cd app/build/linux/arm64/release/bundle
+          tar -czvf ../../../../../result.tar.gz *
 
-      - name: Check if deb file exists
-        id: check_file
-        run: |
-          if [[ ! -f "${{ steps.find_deb.outputs.deb_path }}" ]]; then
-            echo "File not found: ${{ steps.find_deb.outputs.deb_path }}"
-            exit 1
-          fi
-
-      # Remove this when: https://github.com/leanflutter/flutter_distributor/pull/150 is merged
-      - name: Update Architecture
-        run: |
-          mkdir temp
-          cd temp
-          ar x ../${{ steps.find_deb.outputs.deb_path }}
-          tar xJf control.tar.xz --overwrite
-          sed -i '/Architecture:/c\Architecture: arm64' ./control
-          tar cJf control.tar.xz control postinst postrm
-          ar rcs ../${{ steps.find_deb.outputs.deb_path }} debian-binary control.tar.xz data.tar.xz
-
-      - name: Upload deb file
+      - name: Upload tar.gz archive
         uses: actions/upload-artifact@v6
         with:
-          name: deb-arm-64-result
-          path: ${{ steps.find_deb.outputs.deb_path }}
+          name: tar-gz-arm-64-result
+          path: ./app/*.tar.gz
