@@ -2,6 +2,7 @@ name: Build windows arm64 zip
 
 on:
   workflow_dispatch:
+  workflow_call:
 
 # Windows ARM64 requires beta: stable (3.41.9) has no windows-arm64 artifacts and silently falls back to an x64 build.
 # Switch back to the shared stable FLUTTER_VERSION once windows-arm64 reaches stable.
