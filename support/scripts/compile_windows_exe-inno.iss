@@ -41,7 +41,7 @@ UninstallDisplayIcon={app}\{#MyAppExeName}
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
-; CI passes /DSkipSignTool and signs the resulting installer afterwards (SignPath)
+; CI passes /DSkipSignTool and signs the resulting installer afterwards
 #ifndef SkipSignTool
 SignTool=MySignTool
 #endif
