@@ -1,4 +1,4 @@
-name: Build rpm package
+name: Build linux rpm
 
 on:
   workflow_dispatch:
