@@ -4,10 +4,9 @@ on:
   workflow_dispatch:
   workflow_call:
 
-# Windows ARM64 requires beta: stable (3.41.9) has no windows-arm64 artifacts and silently falls back to an x64 build.
-# Switch back to the shared stable FLUTTER_VERSION once windows-arm64 reaches stable.
+# Windows ARM64 requires 3.47+
 env:
-  FLUTTER_VERSION: "3.47.0-0.4.pre"
+  FLUTTER_VERSION: "3.47.4"
 
 jobs:
   build:
