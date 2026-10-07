@@ -12,7 +12,6 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-Android%20%7C%20Windows%20%7C%20macOS%20%7C%20iOS%20%7C%20Linux-blue?style=flat-square" alt="Platforms" />
-  <img src="https://img.shields.io/badge/Refresh%20Rate-120Hz%20Optimized-success?style=flat-square" alt="120Hz Display" />
   <img src="https://img.shields.io/badge/UI-Liquid%20Glass%20Physics-blueviolet?style=flat-square" alt="Liquid Glass" />
   <img src="https://img.shields.io/badge/Core-Rust%20Engine-orange?style=flat-square" alt="Rust Core" />
   <img src="https://img.shields.io/badge/License-MIT%20%2F%20Apache-green?style=flat-square" alt="License" />
@@ -24,7 +23,7 @@
 
 **Local Transfer** is a high-performance, cross-platform file sharing and messaging application that enables instant, secure data transfer across nearby devices on your local network—**with zero internet connection, zero third-party cloud servers, and zero speed throttling**.
 
-Built on a hybrid architecture combining a high-speed **Rust protocol core** with a fluid **Flutter UI**, Local Transfer features a cutting-edge **Liquid Glass optical refraction design system** and dedicated **120Hz high-refresh-rate display optimizations** for unprecedented visual elegance and responsiveness.
+Built on a hybrid architecture combining a high-speed **Rust protocol core** with a fluid **Flutter UI**, Local Transfer features a cutting-edge **Liquid Glass optical refraction design system** for unprecedented visual elegance and responsiveness.
 
 ---
 
@@ -39,10 +38,9 @@ Built on a hybrid architecture combining a high-speed **Rust protocol core** wit
   - **Quick Action Grid:** Glass-morphic action tiles for *File*, *Media*, *Paste*, *Text*, *Folder*, and *App*.
   - **Interactive Action Buttons:** Tactile fluid press states with haptic micro-feedback on *Add*, *Receive via link*, *Fix automatically*, and *Open Firewall*.
 
-### ⚡ 120Hz High-Refresh-Rate Performance
-- **Proactive Display Negotiation:** Auto-detects and engages high refresh rates (`FlutterDisplayMode.setHighRefreshRate()`) at app startup.
+### ⚡ Smooth High-Performance Experience
 - **Fluid Spring Physics:** Micro-tuned cubic Bezier and spring curves (120ms–250ms response windows) eliminate micro-stutter and frame drops during navigation and touch interactions.
-- **Decoupled Background Networking:** All heavy cryptography, chunk streaming, and socket operations run on independent background isolates and native Rust threads, keeping the UI thread pinned to 120 FPS.
+- **Decoupled Background Networking:** All heavy cryptography, chunk streaming, and socket operations run on independent background isolates and native Rust threads, keeping the UI thread smooth and responsive.
 
 ### 🔒 Enterprise-Grade Local Security & Privacy
 - **End-to-End TLS Encryption:** Every session generates on-the-fly X.509 certificates with mandatory mutual client certificate verification (SHA-256 fingerprint matching).
@@ -65,7 +63,7 @@ Local Transfer uses a modern multi-layer architecture separating business logic,
 ┌────────────────────────────────────────────────────────┐
 │                   Flutter UI (App)                     │
 │    Refena State Management • Liquid Glass Design       │
-│    120Hz Animation Controllers • Slang i18n            │
+│    Animation Controllers • Slang i18n                │
 └───────────────────────────┬────────────────────────────┘
                             │ Method Channels / FRB
 ┌───────────────────────────▼────────────────────────────┐
