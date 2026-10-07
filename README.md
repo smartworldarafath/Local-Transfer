@@ -4,7 +4,7 @@
   <img src="app/assets/img/logo-512.png" alt="Local Transfer Logo" width="128" height="128" />
 </p>
 
-<h3 align="center">Next-Generation Secure Local File Sharing with Liquid Glass Aesthetics & 120Hz Fluidity</h3>
+<h3 align="center">Next-Generation Secure Local File Sharing with Liquid Glass Aesthetics </h3>
 
 <p align="center">
   <b>Developed & Maintained by <a href="https://github.com/smartworldarafath">Arafath</a></b>
