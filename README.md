@@ -164,7 +164,6 @@ flutter build apk --target-platform android-arm64 --release --android-skip-build
 ## 👨‍💻 Developer & Credits
 
 - **Developer:** [Arafath](https://github.com/smartworldarafath)
-- **Original Base Project:** [LocalSend](https://github.com/localsend/localsend) by Tien Do Nam
 - **Liquid Glass Physics:** Based on Snell's Law Optical Refraction & AGSL Runtime Shader implementations.
 
 ---
