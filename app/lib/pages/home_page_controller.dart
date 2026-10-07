@@ -36,7 +36,13 @@ class ChangeTabAction extends ReduxAction<HomePageController, HomePageVm> {
 
   @override
   HomePageVm reduce() {
-    state.controller.jumpToPage(tab.index);
+    if (state.controller.hasClients) {
+      state.controller.animateToPage(
+        tab.index,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+    }
     return HomePageVm(
       controller: state.controller,
       currentTab: tab,
