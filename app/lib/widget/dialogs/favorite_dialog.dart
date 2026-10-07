@@ -8,6 +8,7 @@ import 'package:localsend_app/provider/http_provider.dart';
 import 'package:localsend_app/provider/settings_provider.dart';
 import 'package:localsend_app/widget/dialogs/error_dialog.dart';
 import 'package:localsend_app/widget/dialogs/favorite_edit_dialog.dart';
+import 'package:localsend_app/widget/liquid_glass.dart';
 import 'package:localsend_isolates/rust/api/model.dart';
 import 'package:localsend_isolates/util/rust.dart';
 import 'package:refena_flutter/refena_flutter.dart';
@@ -131,9 +132,18 @@ class _FavoritesDialogState extends State<FavoritesDialog> with Refena {
           onPressed: () => context.pop(),
           child: Text(t.general.cancel),
         ),
-        FilledButton(
-          onPressed: _showDeviceDialog,
-          child: Text(t.dialogs.favoriteDialog.addFavorite),
+        LiquidGlassButton(
+          filled: true,
+          onTap: _showDeviceDialog,
+          borderRadius: BorderRadius.circular(20),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          child: Text(
+            t.dialogs.favoriteDialog.addFavorite,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ),
       ],
     );

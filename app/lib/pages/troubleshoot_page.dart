@@ -9,6 +9,7 @@ import 'package:localsend_app/util/native/macos_channel.dart' as macos_channel;
 import 'package:localsend_app/util/native/platform_check.dart';
 import 'package:localsend_app/widget/custom_icon_button.dart';
 import 'package:localsend_app/widget/dialogs/not_available_on_platform_dialog.dart';
+import 'package:localsend_app/widget/liquid_glass.dart';
 import 'package:localsend_app/widget/responsive_list_view.dart';
 import 'package:refena_flutter/refena_flutter.dart';
 
@@ -161,12 +162,11 @@ class _FixButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
-      ),
-      onPressed: () async {
+    return LiquidGlassButton(
+      filled: true,
+      borderRadius: BorderRadius.circular(16),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+      onTap: () async {
         if (onTap != null) {
           onTap!.runFix();
         } else {
@@ -176,7 +176,13 @@ class _FixButton extends StatelessWidget {
           );
         }
       },
-      child: Text(label),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onPrimary,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }
