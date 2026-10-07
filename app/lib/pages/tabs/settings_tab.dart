@@ -4,6 +4,7 @@ import 'package:localsend_app/config/theme.dart';
 import 'package:localsend_app/gen/strings.g.dart';
 import 'package:localsend_app/model/persistence/color_mode.dart';
 import 'package:localsend_app/pages/about/about_page.dart';
+import 'package:localsend_app/pages/app_updates_page.dart';
 import 'package:localsend_app/pages/changelog_page.dart';
 import 'package:localsend_app/pages/donation/donation_page.dart';
 import 'package:localsend_app/pages/settings/network_interfaces_page.dart';
@@ -86,6 +87,11 @@ class SettingsTab extends StatelessWidget {
                   label: t.settingsTab.general.language,
                   buttonLabel: vm.settings.locale?.getLocaleName() ?? t.settingsTab.general.languageOptions.system,
                   onTap: () => vm.onTapLanguage(context),
+                ),
+                _ButtonEntry(
+                  label: 'App updates',
+                  buttonLabel: 'Check for updates',
+                  onTap: () => context.push(() => const AppUpdatesPage()),
                 ),
                 if (checkPlatformIsDesktop()) ...[
                   _BooleanEntry(
@@ -595,6 +601,18 @@ class SettingsTab extends StatelessWidget {
             Text(
               '© ${DateTime.now().year} Arafath',
               textAlign: TextAlign.center,
+            ),
+            Center(
+              child: TextButton.icon(
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.onSurface,
+                ),
+                onPressed: () async {
+                  await context.push(() => const AppUpdatesPage());
+                },
+                icon: const Icon(Icons.system_update_rounded),
+                label: const Text('App updates'),
+              ),
             ),
             Center(
               child: TextButton.icon(
