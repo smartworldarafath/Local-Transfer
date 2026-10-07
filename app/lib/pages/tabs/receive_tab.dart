@@ -13,6 +13,7 @@ import 'package:localsend_app/util/ip_helper.dart';
 import 'package:localsend_app/widget/animations/initial_fade_transition.dart';
 import 'package:localsend_app/widget/column_list_view.dart';
 import 'package:localsend_app/widget/custom_icon_button.dart';
+import 'package:localsend_app/widget/liquid_glass.dart';
 import 'package:localsend_app/widget/local_send_logo.dart';
 import 'package:localsend_app/widget/responsive_list_view.dart';
 import 'package:localsend_app/widget/rotating_widget.dart';
@@ -105,12 +106,26 @@ class _ReceiveTabState extends State<ReceiveTab> {
                   Padding(
                     padding: const EdgeInsets.only(top: 10),
                     child: Center(
-                      child: OutlinedButton.icon(
-                        onPressed: () async {
+                      child: LiquidGlassButton(
+                        borderRadius: BorderRadius.circular(24),
+                        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+                        onTap: () async {
                           await context.global.dispatchAsync(NavigateAction.push(const WebSharePage()));
                         },
-                        icon: Icon(Icons.language),
-                        label: Text(t.receiveTab.link),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.language, color: Theme.of(context).colorScheme.primary),
+                            const SizedBox(width: 8),
+                            Text(
+                              t.receiveTab.link,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

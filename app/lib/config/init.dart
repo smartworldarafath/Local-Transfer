@@ -61,6 +61,12 @@ final _logger = Logger('Init');
 Future<RefenaContainer> preInit(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  if (checkPlatform([TargetPlatform.android])) {
+    try {
+      await FlutterDisplayMode.setHighRefreshRate();
+    } catch (_) {}
+  }
+
   initLogger(args.contains('-v') || args.contains('--verbose') ? Level.ALL : Level.INFO);
 
   if (checkPlatform([TargetPlatform.linux])) {
