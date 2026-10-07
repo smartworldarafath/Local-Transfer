@@ -9,7 +9,7 @@ import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import org.localsend.localsend_app.R;
+import com.localtransfer.app.R;
 
 /**
  * Drop-in FrameLayout that applies real-time Snell's Law Liquid Glass refraction
