@@ -1,0 +1,174 @@
+name: Build Multiplatform Packages
+
+on:
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: "3.41.9"
+
+jobs:
+  # 1. Windows x64 Portable Zip & Installer
+  build_windows:
+    runs-on: windows-latest
+    steps:
+      - name: Enable long file paths
+        run: git config --system core.longpaths true
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: "stable"
+
+      - name: Build MSIX helper
+        run: |
+          $makepri = Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\bin\10.*\x64\makepri.exe' | Select-Object -Last 1
+          & $makepri.FullName new /pr support\build\msix\content /cf support\build\msix\priconfig.xml /mn support\build\msix\content\AppxManifest.xml /of support\build\msix\content\resources.pri /o
+          & 'C:\Program Files (x86)\Windows Kits\10\App Certification Kit\makeappx.exe' pack /o /d support\build\msix\content /nv /p app\windows\localsend_msix_helper.msix
+
+      - name: Flutter Dependencies
+        working-directory: app
+        run: flutter pub get
+
+      - name: Build Windows Release
+        working-directory: app
+        run: flutter build windows --release
+
+      - name: Package Windows ZIP
+        run: |
+          New-Item -ItemType Directory -Force -Path "build_output\windows" | Out-Null
+          Compress-Archive -Path "app\build\windows\x64\runner\Release\*" -DestinationPath "build_output\windows\LocalTransfer-v1.2.0-beta1-windows-x64.zip" -Force
+
+      - name: Package Inno Setup Installer
+        run: |
+          New-Item -ItemType Directory -Force -Path "${{ runner.temp }}\inno" | Out-Null
+          Copy-Item -Path "app\build\windows\x64\runner\Release\*" -Destination "${{ runner.temp }}\inno" -Recurse
+          Copy-Item -Path "app\assets\packaging\logo.ico" -Destination "${{ runner.temp }}\inno"
+          Copy-Item -Path "support\build\windows\x64\*" -Destination "${{ runner.temp }}\inno" -Recurse
+          New-Item -ItemType Directory -Force -Path "${{ runner.temp }}\inno-result" | Out-Null
+          iscc /DSkipSignTool /DSkipMsixHelper "/DPayloadDir=${{ runner.temp }}\inno" "/DResultDir=${{ runner.temp }}\inno-result" support\scripts\compile_windows_exe-inno.iss
+          Copy-Item -Path "${{ runner.temp }}\inno-result\localsend.exe" -Destination "build_output\windows\LocalTransfer-v1.2.0-beta1-windows-x64.exe" -Force
+
+      - name: Upload Windows to Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload v1.2.0-beta1 "build_output\windows\LocalTransfer-v1.2.0-beta1-windows-x64.zip" "build_output\windows\LocalTransfer-v1.2.0-beta1-windows-x64.exe" --clobber --repo smartworldarafath/Local-Transfer
+
+  # 2. Linux AppImage & Deb (x86_64)
+  build_linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake libgtk-3-dev ninja-build libayatana-appindicator3-dev libfuse2
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: "stable"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Flutter Dependencies
+        working-directory: app
+        run: flutter pub get
+
+      - name: Build Linux Release
+        working-directory: app
+        run: flutter build linux --release
+
+      - name: Package Linux Tar.gz
+        run: |
+          mkdir -p build_output/linux
+          tar -czf build_output/linux/LocalTransfer-v1.2.0-beta1-linux-x86_64.tar.gz -C app/build/linux/x64/release/bundle .
+
+      - name: Upload Linux to Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload v1.2.0-beta1 "build_output/linux/LocalTransfer-v1.2.0-beta1-linux-x86_64.tar.gz" --clobber --repo smartworldarafath/Local-Transfer
+
+  # 3. macOS DMG & App
+  build_macos:
+    runs-on: macos-14
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: "stable"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Flutter Dependencies
+        working-directory: app
+        run: flutter pub get
+
+      - name: Build macOS Release
+        working-directory: app
+        run: flutter build macos --release
+
+      - name: Create macOS zip
+        run: |
+          mkdir -p build_output/macos
+          cd app/build/macos/Build/Products/Release
+          zip -r -y ../../../../../build_output/macos/LocalTransfer-v1.2.0-beta1-macos.zip LocalSend.app
+          cd ../../../../../
+
+      - name: Upload macOS to Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload v1.2.0-beta1 "build_output/macos/LocalTransfer-v1.2.0-beta1-macos.zip" --clobber --repo smartworldarafath/Local-Transfer
+
+  # 4. iOS / iPadOS IPA (unsigned payload for AltStore / Sideloadly / TrollStore)
+  build_ios:
+    runs-on: macos-14
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: "stable"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Flutter Dependencies
+        working-directory: app
+        run: flutter pub get
+
+      - name: Build iOS No-Codesign
+        working-directory: app
+        run: flutter build ios --release --no-codesign
+
+      - name: Package Payload IPA
+        run: |
+          mkdir -p build_output/ios/Payload
+          cp -r app/build/ios/iphoneos/Runner.app build_output/ios/Payload/
+          cd build_output/ios
+          zip -r LocalTransfer-v1.2.0-beta1-ios-universal.ipa Payload
+          cd ../../
+
+      - name: Upload iOS/iPadOS IPA to Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload v1.2.0-beta1 "build_output/ios/LocalTransfer-v1.2.0-beta1-ios-universal.ipa" --clobber --repo smartworldarafath/Local-Transfer
