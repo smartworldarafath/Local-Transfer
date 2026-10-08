@@ -266,15 +266,15 @@ class LiquidGlassDock extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         child: LiquidGlassMaterial(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(35),
           blurSigma: 20,
           tintColor: isDark
-              ? Colors.black.withOpacity(0.35)
-              : Colors.white.withOpacity(0.70),
+              ? const Color(0xFF161922).withOpacity(0.92)
+              : Colors.white.withOpacity(0.85),
           intensity: 0.95,
           child: Container(
-            height: 68,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            height: 70,
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final count = destinations.length;
@@ -282,31 +282,20 @@ class LiquidGlassDock extends StatelessWidget {
 
                 return Stack(
                   children: [
-                    // Fluid animated sliding liquid glass indicator pill
+                    // Fluid animated sliding active pill matching mockups
                     AnimatedPositioned(
                       duration: const Duration(milliseconds: 250),
                       curve: Curves.easeOutCubic,
-                      left: selectedIndex * itemWidth + (itemWidth - 64) / 2,
-                      top: 4,
-                      width: 64,
-                      height: 32,
+                      left: selectedIndex * itemWidth + 2,
+                      top: 2,
+                      width: itemWidth - 4,
+                      height: 54,
                       child: Container(
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          color: colorScheme.primary.withOpacity(isDark ? 0.35 : 0.22),
-                          border: Border.all(
-                            color: isDark
-                                ? Colors.white.withOpacity(0.3)
-                                : colorScheme.primary.withOpacity(0.5),
-                            width: 1.2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: colorScheme.primary.withOpacity(isDark ? 0.30 : 0.20),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
+                          borderRadius: BorderRadius.circular(27),
+                          color: isDark
+                              ? const Color(0xFF2C3549)
+                              : colorScheme.primary.withOpacity(0.18),
                         ),
                       ),
                     ),
@@ -389,10 +378,11 @@ class _LiquidGlassDockItemState extends State<_LiquidGlassDockItem>
     final colorScheme = theme.colorScheme;
     final isSelected = widget.isSelected;
 
-    final activeColor = colorScheme.primary;
-    final inactiveColor = Theme.of(context).brightness == Brightness.dark
-        ? Colors.white.withOpacity(0.65)
-        : Colors.black.withOpacity(0.60);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor = isDark ? const Color(0xFF62A2FF) : colorScheme.primary;
+    final inactiveColor = isDark
+        ? Colors.white.withOpacity(0.55)
+        : Colors.black.withOpacity(0.55);
 
     return AnimatedBuilder(
       animation: _pressController,
