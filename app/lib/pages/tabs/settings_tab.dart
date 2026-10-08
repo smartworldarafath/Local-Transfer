@@ -40,121 +40,82 @@ class SettingsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+
     return ViewModelBuilder(
       provider: (ref) => settingsTabControllerProvider,
       builder: (context, vm) {
         final ref = context.ref;
         return ResponsiveListView(
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 40),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
           children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: Text(t.settingsTab.title, style: Theme.of(context).textTheme.titleLarge, textAlign: TextAlign.center),
+            // Page Title: "Settings"
+            Text(
+              t.settingsTab.title,
+              style: TextStyle(
+                fontSize: 34,
+                fontWeight: FontWeight.w700,
+                color: textColor,
+                letterSpacing: -0.5,
+              ),
             ),
-            const SizedBox(height: 30),
-            _SettingsSection(
-              title: t.settingsTab.general.title,
+            const SizedBox(height: 24),
+
+            // General Section Header
+            Text(
+              t.settingsTab.general.title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: textColor.withOpacity(0.65),
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            // General Card Container (wrapping Theme, Color, Language, App updates, Animations)
+            _SettingsPillGroup(
               children: [
-                _SettingsEntry(
+                _SettingsDropdownRow<ThemeMode>(
                   label: t.settingsTab.general.brightness,
-                  child: CustomDropdownButton<ThemeMode>(
-                    value: vm.settings.theme,
-                    items: vm.themeModes.map((theme) {
-                      return DropdownMenuItem(
-                        value: theme,
-                        alignment: Alignment.center,
-                        child: Text(theme.humanName),
-                      );
-                    }).toList(),
-                    onChanged: (theme) => vm.onChangeTheme(context, theme),
-                  ),
+                  value: vm.settings.theme,
+                  items: vm.themeModes.map((theme) {
+                    return DropdownMenuItem(
+                      value: theme,
+                      alignment: Alignment.center,
+                      child: Text(theme.humanName),
+                    );
+                  }).toList(),
+                  onChanged: (theme) {
+                    if (theme != null) vm.onChangeTheme(context, theme);
+                  },
                 ),
-                _SettingsEntry(
+                _SettingsDropdownRow<ColorMode>(
                   label: t.settingsTab.general.color,
-                  child: CustomDropdownButton<ColorMode>(
-                    value: vm.settings.colorMode,
-                    items: vm.colorModes.map((colorMode) {
-                      return DropdownMenuItem(
-                        value: colorMode,
-                        alignment: Alignment.center,
-                        child: Text(colorMode.humanName, overflow: TextOverflow.ellipsis),
-                      );
-                    }).toList(),
-                    onChanged: (colorMode) => vm.onChangeColorMode(context, colorMode),
-                  ),
+                  value: vm.settings.colorMode,
+                  items: vm.colorModes.map((colorMode) {
+                    return DropdownMenuItem(
+                      value: colorMode,
+                      alignment: Alignment.center,
+                      child: Text(colorMode.humanName, overflow: TextOverflow.ellipsis),
+                    );
+                  }).toList(),
+                  onChanged: (colorMode) {
+                    if (colorMode != null) vm.onChangeColorMode(context, colorMode);
+                  },
                 ),
-                _ButtonEntry(
+                _SettingsPillButtonRow(
                   label: t.settingsTab.general.language,
                   buttonLabel: vm.settings.locale?.getLocaleName() ?? t.settingsTab.general.languageOptions.system,
                   onTap: () => vm.onTapLanguage(context),
                 ),
-                _ButtonEntry(
+                _SettingsPillButtonRow(
                   label: 'App updates',
                   buttonLabel: 'Check for updates',
                   onTap: () => context.push(() => const AppUpdatesPage()),
                 ),
-                if (checkPlatformIsDesktop()) ...[
-                  _BooleanEntry(
-                    label: t.settingsTab.general.alwaysOnTop,
-                    value: checkPlatformIsNotWaylandDesktop() && vm.settings.alwaysOnTop,
-                    description: checkPlatformIsNotWaylandDesktop() ? null : t.settingsTab.general.alwaysOnTopUnavailable,
-                    onChanged: checkPlatformIsNotWaylandDesktop()
-                        ? (b) async {
-                            await ref.notifier(settingsProvider).setAlwaysOnTop(b);
-                          }
-                        : null,
-                  ),
-
-                  /// Wayland does window position handling, so there's no need for it. See [https://github.com/localsend/localsend/issues/544]
-                  if (vm.advanced && checkPlatformIsNotWaylandDesktop())
-                    _BooleanEntry(
-                      label: defaultTargetPlatform == TargetPlatform.windows
-                          ? t.settingsTab.general.saveWindowPlacementWindows
-                          : t.settingsTab.general.saveWindowPlacement,
-                      value: vm.settings.saveWindowPlacement,
-                      onChanged: (b) async {
-                        await ref.notifier(settingsProvider).setSaveWindowPlacement(b);
-                      },
-                    ),
-                  if (checkPlatformHasTray()) ...[
-                    _BooleanEntry(
-                      label: t.settingsTab.general.minimizeToTray,
-                      value: vm.settings.minimizeToTray,
-                      onChanged: (b) async {
-                        await ref.notifier(settingsProvider).setMinimizeToTray(b);
-                      },
-                    ),
-                  ],
-                  if (checkPlatformIsDesktop()) ...[
-                    _BooleanEntry(
-                      label: t.settingsTab.general.launchAtStartup,
-                      value: vm.autoStart,
-                      onChanged: (_) => vm.onToggleAutoStart(context),
-                    ),
-                    Visibility(
-                      visible: vm.autoStart,
-                      maintainAnimation: true,
-                      maintainState: true,
-                      child: AnimatedOpacity(
-                        opacity: vm.autoStart ? 1.0 : 0.0,
-                        duration: const Duration(milliseconds: 500),
-                        child: _BooleanEntry(
-                          label: t.settingsTab.general.launchMinimized,
-                          value: vm.autoStartLaunchHidden,
-                          onChanged: (_) => vm.onToggleAutoStartLaunchHidden(context),
-                        ),
-                      ),
-                    ),
-                  ],
-                  if (vm.advanced && checkPlatform([TargetPlatform.windows])) ...[
-                    _BooleanEntry(
-                      label: t.settingsTab.general.showInContextMenu,
-                      value: vm.showInContextMenu,
-                      onChanged: (_) => vm.onToggleShowInContextMenu(context),
-                    ),
-                  ],
-                ],
-                _BooleanEntry(
+                _SettingsToggleRow(
                   label: t.settingsTab.general.animations,
                   value: vm.settings.enableAnimations,
                   onChanged: (b) async {
@@ -163,470 +124,234 @@ class SettingsTab extends StatelessWidget {
                 ),
               ],
             ),
-            _SettingsSection(
-              title: t.settingsTab.receive.title,
-              children: [
-                _BooleanEntry(
-                  label: t.settingsTab.receive.quickSave,
-                  value: vm.settings.quickSave,
-                  onChanged: (b) async {
-                    final old = vm.settings.quickSave;
-                    await ref.notifier(settingsProvider).setQuickSave(b);
-                    if (b) {
-                      await ref.notifier(settingsProvider).setQuickSaveFromFavorites(false);
-                    }
-                    if (!old && b && context.mounted) {
-                      await QuickSaveNotice.open(context);
-                    }
-                  },
-                ),
-                _BooleanEntry(
-                  label: t.settingsTab.receive.quickSaveFromFavorites,
-                  value: vm.settings.quickSaveFromFavorites,
-                  onChanged: (b) async {
-                    final old = vm.settings.quickSaveFromFavorites;
-                    await ref.notifier(settingsProvider).setQuickSaveFromFavorites(b);
-                    if (b) {
-                      await ref.notifier(settingsProvider).setQuickSave(false);
-                    }
-                    if (!old && b && context.mounted) {
-                      await QuickSaveFromFavoritesNotice.open(context);
-                    }
-                  },
-                ),
-                _BooleanEntry(
-                  label: t.settingsTab.receive.requirePin,
-                  value: vm.settings.receivePin != null,
-                  onChanged: (b) async {
-                    final currentPIN = vm.settings.receivePin;
-                    if (currentPIN != null) {
-                      await ref.notifier(settingsProvider).setReceivePin(null);
-                    } else {
-                      final String? newPin = await showDialog<String>(
-                        context: context,
-                        builder: (_) => const PinDialog(
-                          obscureText: false,
-                          generateRandom: false,
-                        ),
-                      );
+            const SizedBox(height: 28),
 
-                      if (newPin != null && newPin.isNotEmpty) {
-                        await ref.notifier(settingsProvider).setReceivePin(newPin);
-                      }
-                    }
-
-                    // The pin is enforced by the Rust server, so it needs a restart.
-                    if (ref.read(serverProvider) != null) {
-                      await ref.notifier(serverProvider).restartServerFromSettings();
-                    }
-                  },
-                ),
-                if (checkPlatformWithFileSystem())
-                  _SettingsEntry(
-                    label: t.settingsTab.receive.destination,
-                    child: TextButton(
-                      style: TextButton.styleFrom(
-                        backgroundColor: Theme.of(context).inputDecorationTheme.fillColor,
-                        shape: RoundedRectangleBorder(borderRadius: Theme.of(context).inputDecorationTheme.borderRadius),
-                        foregroundColor: Theme.of(context).colorScheme.onSurface,
-                      ),
-                      onPressed: () async {
-                        if (vm.settings.destination != null) {
-                          await ref.notifier(settingsProvider).setDestination(null);
-                          if (defaultTargetPlatform == TargetPlatform.macOS) {
-                            await removeExistingDestinationAccess();
-                          }
-                          return;
-                        }
-
-                        final directory = await pickDirectoryPath();
-                        if (directory != null) {
-                          if (defaultTargetPlatform == TargetPlatform.macOS) {
-                            await persistDestinationFolderAccess(directory);
-                          }
-                          await ref.notifier(settingsProvider).setDestination(directory);
-                        }
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 5),
-                        child: Text(vm.settings.destination ?? t.settingsTab.receive.downloads, style: Theme.of(context).textTheme.titleMedium),
-                      ),
-                    ),
-                  ),
-                if (checkPlatformWithGallery())
-                  _BooleanEntry(
-                    label: t.settingsTab.receive.saveToGallery,
-                    value: vm.settings.saveToGallery,
-                    onChanged: (b) async {
-                      await ref.notifier(settingsProvider).setSaveToGallery(b);
-                    },
-                  ),
-                _BooleanEntry(
-                  label: t.settingsTab.receive.autoFinish,
-                  value: vm.settings.autoFinish,
-                  onChanged: (b) async {
-                    await ref.notifier(settingsProvider).setAutoFinish(b);
-                  },
-                ),
-                _BooleanEntry(
-                  label: t.settingsTab.receive.saveToHistory,
-                  value: vm.settings.saveToHistory,
-                  onChanged: (b) async {
-                    await ref.notifier(settingsProvider).setSaveToHistory(b);
-                  },
-                ),
-                if (vm.advanced)
-                  _BooleanEntry(
-                    label: t.settingsTab.receive.verifyChecksums,
-                    value: vm.settings.verifyChecksums,
-                    onChanged: (b) async {
-                      await ref.notifier(settingsProvider).setVerifyChecksums(b);
-
-                      // The checksums are verified by the Rust server, so it needs a restart.
-                      if (ref.read(serverProvider) != null) {
-                        await ref.notifier(serverProvider).restartServerFromSettings();
-                      }
-                    },
-                  ),
-              ],
-            ),
-            if (vm.advanced)
-              _SettingsSection(
-                title: t.settingsTab.send.title,
-                children: [
-                  _BooleanEntry(
-                    label: t.settingsTab.send.shareViaLinkAutoAccept,
-                    value: vm.settings.shareViaLinkAutoAccept,
-                    onChanged: (b) async {
-                      await ref.notifier(settingsProvider).setShareViaLinkAutoAccept(b);
-                    },
-                  ),
-                  _BooleanEntry(
-                    label: t.settingsTab.send.createChecksums,
-                    value: vm.settings.createChecksums,
-                    onChanged: (b) async {
-                      await ref.notifier(settingsProvider).setCreateChecksums(b);
-                    },
-                  ),
-                ],
+            // Receive Section Header
+            Text(
+              t.settingsTab.receive.title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: textColor.withOpacity(0.65),
               ),
-            _SettingsSection(
-              title: t.settingsTab.network.title,
-              children: [
-                AnimatedCrossFade(
-                  crossFadeState:
-                      vm.serverState != null &&
-                          (vm.serverState!.alias != vm.settings.alias ||
-                              vm.serverState!.port != vm.settings.port ||
-                              vm.serverState!.https != vm.settings.https)
-                      ? CrossFadeState.showSecond
-                      : CrossFadeState.showFirst,
-                  duration: const Duration(milliseconds: 200),
-                  alignment: Alignment.topLeft,
-                  firstChild: Container(),
-                  secondChild: Padding(
-                    padding: const EdgeInsets.only(bottom: 15),
-                    child: Text(t.settingsTab.network.needRestart, style: TextStyle(color: Theme.of(context).colorScheme.warning)),
-                  ),
-                ),
-                _SettingsEntry(
-                  label: '${t.settingsTab.network.server}${vm.serverState == null ? ' (${t.general.offline})' : ''}',
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).inputDecorationTheme.fillColor,
-                      borderRadius: Theme.of(context).inputDecorationTheme.borderRadius,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        if (vm.serverState == null)
-                          Tooltip(
-                            message: t.general.start,
-                            child: TextButton(
-                              style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.onSurface, iconSize: 24),
-                              onPressed: () => vm.onTapStartServer(context),
-                              child: const Icon(Icons.play_arrow),
-                            ),
-                          )
-                        else
-                          Tooltip(
-                            message: t.general.restart,
-                            child: TextButton(
-                              style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.onSurface, iconSize: 24),
-                              onPressed: () => vm.onTapRestartServer(context),
-                              child: const Icon(Icons.refresh),
-                            ),
-                          ),
-                        Tooltip(
-                          message: t.general.stop,
-                          child: TextButton(
-                            style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.onSurface, iconSize: 24),
-                            onPressed: vm.serverState == null ? null : vm.onTapStopServer,
-                            child: const Icon(Icons.stop),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                _SettingsEntry(
-                  label: t.settingsTab.network.alias,
-                  child: TextFieldWithActions(
-                    name: t.settingsTab.network.alias,
-                    controller: vm.aliasController,
-                    onChanged: (s) async {
-                      await ref.notifier(settingsProvider).setAlias(s);
-                    },
-                    actions: [
-                      Tooltip(
-                        message: t.settingsTab.network.generateRandomAlias,
-                        child: IconButton(
-                          onPressed: () async {
-                            // Generates random alias
-                            final newAlias = generateRandomAlias();
-
-                            // Update the TextField with the new alias
-                            vm.aliasController.text = newAlias;
-
-                            // Persist the new alias using the settingsProvider
-                            await ref.notifier(settingsProvider).setAlias(newAlias);
-                          },
-                          icon: const Icon(Icons.casino),
-                        ),
-                      ),
-                      Tooltip(
-                        message: t.settingsTab.network.useSystemName,
-                        child: IconButton(
-                          onPressed: () async {
-                            final newAlias = await getDeviceName();
-                            if (newAlias == null) {
-                              return;
-                            }
-
-                            vm.aliasController.text = newAlias;
-                            await ref.notifier(settingsProvider).setAlias(newAlias);
-                          },
-                          icon: const Icon(Icons.desktop_windows_rounded),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (vm.advanced)
-                  _SettingsEntry(
-                    label: t.settingsTab.network.deviceType,
-                    child: CustomDropdownButton<DeviceType>(
-                      value: vm.deviceInfo.deviceType,
-                      items: DeviceType.values.map((type) {
-                        return DropdownMenuItem(
-                          value: type,
-                          alignment: Alignment.center,
-                          child: Icon(type.icon),
-                        );
-                      }).toList(),
-                      onChanged: (type) async {
-                        await ref.notifier(settingsProvider).setDeviceType(type);
-                      },
-                    ),
-                  ),
-                if (vm.advanced)
-                  _SettingsEntry(
-                    label: t.settingsTab.network.deviceModel,
-                    child: TextFieldTv(
-                      name: t.settingsTab.network.deviceModel,
-                      controller: vm.deviceModelController,
-                      onChanged: (s) async {
-                        await ref.notifier(settingsProvider).setDeviceModel(s);
-                      },
-                    ),
-                  ),
-                if (vm.advanced)
-                  _SettingsEntry(
-                    label: t.settingsTab.network.port,
-                    child: TextFieldTv(
-                      name: t.settingsTab.network.port,
-                      controller: vm.portController,
-                      onChanged: (s) async {
-                        final port = int.tryParse(s);
-                        if (port != null) {
-                          await ref.notifier(settingsProvider).setPort(port);
-                        }
-                      },
-                    ),
-                  ),
-                if (vm.advanced)
-                  _ButtonEntry(
-                    label: t.settingsTab.network.network,
-                    buttonLabel: switch (vm.settings.networkWhitelist != null || vm.settings.networkBlacklist != null) {
-                      true => t.settingsTab.network.networkOptions.filtered,
-                      false => t.settingsTab.network.networkOptions.all,
-                    },
-                    onTap: () async {
-                      await context.push(() => const NetworkInterfacesPage());
-                    },
-                  ),
-                if (vm.advanced)
-                  _SettingsEntry(
-                    label: t.settingsTab.network.discoveryTimeout,
-                    child: TextFieldTv(
-                      name: t.settingsTab.network.discoveryTimeout,
-                      controller: vm.timeoutController,
-                      onChanged: (s) async {
-                        final timeout = int.tryParse(s);
-                        if (timeout != null) {
-                          await ref.notifier(settingsProvider).setDiscoveryTimeout(timeout);
-                        }
-                      },
-                    ),
-                  ),
-                if (vm.advanced)
-                  _BooleanEntry(
-                    label: t.settingsTab.network.encryption,
-                    value: vm.settings.https,
-                    onChanged: (b) async {
-                      final old = vm.settings.https;
-                      await ref.notifier(settingsProvider).setHttps(b);
-                      if (old && !b && context.mounted) {
-                        await EncryptionDisabledNotice.open(context);
-                      }
-                    },
-                  ),
-                if (vm.advanced)
-                  _SettingsEntry(
-                    label: t.settingsTab.network.multicastGroup,
-                    child: TextFieldTv(
-                      name: t.settingsTab.network.multicastGroup,
-                      controller: vm.multicastController,
-                      onChanged: (s) async {
-                        await ref.notifier(settingsProvider).setMulticastGroup(s);
-                      },
-                    ),
-                  ),
-                AnimatedCrossFade(
-                  crossFadeState: vm.settings.port != defaultPort ? CrossFadeState.showSecond : CrossFadeState.showFirst,
-                  duration: const Duration(milliseconds: 200),
-                  alignment: Alignment.topLeft,
-                  firstChild: Container(),
-                  secondChild: Padding(
-                    padding: const EdgeInsets.only(bottom: 15),
-                    child: Text(
-                      t.settingsTab.network.portWarning(defaultPort: defaultPort),
-                      style: const TextStyle(color: Colors.grey),
-                    ),
-                  ),
-                ),
-                AnimatedCrossFade(
-                  crossFadeState: vm.settings.multicastGroup != defaultMulticastGroup ? CrossFadeState.showSecond : CrossFadeState.showFirst,
-                  duration: const Duration(milliseconds: 200),
-                  alignment: Alignment.topLeft,
-                  firstChild: Container(),
-                  secondChild: Padding(
-                    padding: const EdgeInsets.only(bottom: 15),
-                    child: Text(
-                      t.settingsTab.network.multicastGroupWarning(defaultMulticast: defaultMulticastGroup),
-                      style: const TextStyle(color: Colors.grey),
-                    ),
-                  ),
-                ),
-              ],
             ),
-            _SettingsSection(
-              title: t.settingsTab.other.title,
-              padding: const EdgeInsets.only(bottom: 0),
+            const SizedBox(height: 10),
+
+            // Receive Section Items as individual pill cards
+            _SettingsPillCard(
+              child: _SettingsToggleRow(
+                label: t.settingsTab.receive.quickSave,
+                value: vm.settings.quickSave,
+                onChanged: (b) async {
+                  final old = vm.settings.quickSave;
+                  await ref.notifier(settingsProvider).setQuickSave(b);
+                  if (b) {
+                    await ref.notifier(settingsProvider).setQuickSaveFromFavorites(false);
+                  }
+                  if (!old && b && context.mounted) {
+                    await QuickSaveNotice.open(context);
+                  }
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            _SettingsPillCard(
+              child: _SettingsToggleRow(
+                label: t.settingsTab.receive.quickSaveFromFavorites,
+                value: vm.settings.quickSaveFromFavorites,
+                onChanged: (b) async {
+                  final old = vm.settings.quickSaveFromFavorites;
+                  await ref.notifier(settingsProvider).setQuickSaveFromFavorites(b);
+                  if (b) {
+                    await ref.notifier(settingsProvider).setQuickSave(false);
+                  }
+                  if (!old && b && context.mounted) {
+                    await QuickSaveFromFavoritesNotice.open(context);
+                  }
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            _SettingsPillCard(
+              child: _SettingsToggleRow(
+                label: t.settingsTab.receive.requirePin,
+                value: vm.settings.receivePin != null,
+                onChanged: (b) async {
+                  final currentPIN = vm.settings.receivePin;
+                  if (currentPIN != null) {
+                    await ref.notifier(settingsProvider).setReceivePin(null);
+                  } else {
+                    final String? newPin = await showDialog<String>(
+                      context: context,
+                      builder: (_) => const PinDialog(
+                        obscureText: false,
+                        generateRandom: false,
+                      ),
+                    );
+
+                    if (newPin != null && newPin.isNotEmpty) {
+                      await ref.notifier(settingsProvider).setReceivePin(newPin);
+                    }
+                  }
+
+                  if (ref.read(serverProvider) != null) {
+                    await ref.notifier(serverProvider).restartServerFromSettings();
+                  }
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            if (checkPlatformWithFileSystem()) ...[
+              _SettingsPillCard(
+                child: _SettingsPillButtonRow(
+                  label: t.settingsTab.receive.destination,
+                  buttonLabel: vm.settings.destination != null ? '(Custom)' : '(Downloads)',
+                  onTap: () async {
+                    if (vm.settings.destination != null) {
+                      await ref.notifier(settingsProvider).setDestination(null);
+                      if (defaultTargetPlatform == TargetPlatform.macOS) {
+                        await removeExistingDestinationAccess();
+                      }
+                      return;
+                    }
+
+                    final directory = await pickDirectoryPath();
+                    if (directory != null) {
+                      if (defaultTargetPlatform == TargetPlatform.macOS) {
+                        await persistDestinationFolderAccess(directory);
+                      }
+                      await ref.notifier(settingsProvider).setDestination(directory);
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
+
+            if (checkPlatformWithGallery()) ...[
+              _SettingsPillCard(
+                child: _SettingsToggleRow(
+                  label: t.settingsTab.receive.saveToGallery,
+                  value: vm.settings.saveToGallery,
+                  onChanged: (b) async {
+                    await ref.notifier(settingsProvider).setSaveToGallery(b);
+                  },
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
+
+            _SettingsPillCard(
+              child: _SettingsToggleRow(
+                label: t.settingsTab.receive.saveToHistory,
+                value: vm.settings.saveToHistory,
+                onChanged: (b) async {
+                  await ref.notifier(settingsProvider).setSaveToHistory(b);
+                },
+              ),
+            ),
+            const SizedBox(height: 28),
+
+            // Network / About / Advanced Section
+            Text(
+              t.settingsTab.network.title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: textColor.withOpacity(0.65),
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            _SettingsPillGroup(
               children: [
-                _ButtonEntry(
-                  label: t.aboutPage.title,
-                  buttonLabel: t.general.open,
+                _SettingsPillButtonRow(
+                  label: t.settingsTab.network.deviceType,
+                  buttonLabel: vm.deviceInfo.deviceType.name,
                   onTap: () async {
-                    await context.push(() => const AboutPage());
-                  },
-                ),
-                _ButtonEntry(
-                  label: t.settingsTab.other.support,
-                  buttonLabel: t.settingsTab.other.donate,
-                  onTap: () async {
-                    await context.push(() => const DonationPage());
-                  },
-                ),
-                _ButtonEntry(
-                  label: t.settingsTab.other.privacyPolicy,
-                  buttonLabel: t.general.open,
-                  onTap: () async {
-                    await launchUrl(
-                      Uri.parse('https://localsend.org/privacy'),
-                      mode: LaunchMode.externalApplication,
+                    await showDialog(
+                      context: context,
+                      builder: (_) => SimpleDialog(
+                        title: Text(t.settingsTab.network.deviceType),
+                        children: DeviceType.values.map((type) {
+                          return SimpleDialogOption(
+                            onPressed: () {
+                              ref.notifier(settingsProvider).setDeviceType(type);
+                              Navigator.pop(context);
+                            },
+                            child: Row(
+                              children: [
+                                Icon(type.icon),
+                                const SizedBox(width: 10),
+                                Text(type.name),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
                     );
                   },
                 ),
-                if (checkPlatform([TargetPlatform.iOS, TargetPlatform.macOS]))
-                  _ButtonEntry(
-                    label: t.settingsTab.other.termsOfUse,
-                    buttonLabel: t.general.open,
-                    onTap: () async {
-                      await launchUrl(
-                        Uri.parse('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/'),
-                        mode: LaunchMode.externalApplication,
-                      );
-                    },
-                  ),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                LabeledCheckbox(
-                  label: t.settingsTab.advancedSettings,
-                  value: vm.advanced,
-                  labelFirst: true,
-                  onChanged: (b) async {
-                    vm.onTapAdvanced(b == true);
-                    await ref.notifier(settingsProvider).setAdvancedSettingsEnabled(b == true);
+                _SettingsPillButtonRow(
+                  label: t.settingsTab.network.deviceModel,
+                  buttonLabel: vm.deviceModelController.text.isNotEmpty ? vm.deviceModelController.text : '-',
+                  onTap: () async {
+                    await showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text(t.settingsTab.network.deviceModel),
+                        content: TextFormField(
+                          controller: vm.deviceModelController,
+                          textAlign: TextAlign.center,
+                          onChanged: (s) async {
+                            await ref.notifier(settingsProvider).setDeviceModel(s);
+                          },
+                          autofocus: true,
+                          onFieldSubmitted: (_) => context.pop(),
+                        ),
+                        actions: [
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context).colorScheme.primary,
+                              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                            ),
+                            onPressed: () => context.pop(),
+                            child: Text(t.general.confirm),
+                          ),
+                        ],
+                      ),
+                    );
                   },
                 ),
-                const SizedBox(width: 10),
+                _SettingsPillButtonRow(
+                  label: t.settingsTab.network.network,
+                  buttonLabel: 'Interfaces',
+                  onTap: () => context.push(() => const NetworkInterfacesPage()),
+                ),
               ],
             ),
-            const SizedBox(height: 20),
-            const LocalSendLogo(withText: true),
-            const SizedBox(height: 5),
-            ref
-                .watch(versionProvider)
-                .maybeWhen(
-                  data: (version) => Text(
-                    'Version: ${version.combinedString}',
-                    textAlign: TextAlign.center,
-                  ),
-                  orElse: () => Container(),
+
+            const SizedBox(height: 28),
+
+            // About & Version Info
+            _SettingsPillGroup(
+              children: [
+                _SettingsPillButtonRow(
+                  label: 'Version',
+                  buttonLabel: 'v1.2.0 (Beta 1)',
+                  onTap: () => context.push(() => const AboutPage()),
                 ),
-            Text(
-              '© ${DateTime.now().year} Arafath',
-              textAlign: TextAlign.center,
-            ),
-            Center(
-              child: TextButton.icon(
-                style: TextButton.styleFrom(
-                  foregroundColor: Theme.of(context).colorScheme.onSurface,
+                _SettingsPillButtonRow(
+                  label: t.aboutPage.title,
+                  buttonLabel: 'Local Transfer',
+                  onTap: () => context.push(() => const AboutPage()),
                 ),
-                onPressed: () async {
-                  await context.push(() => const AppUpdatesPage());
-                },
-                icon: const Icon(Icons.system_update_rounded),
-                label: const Text('App updates'),
-              ),
+              ],
             ),
-            Center(
-              child: TextButton.icon(
-                style: TextButton.styleFrom(
-                  foregroundColor: Theme.of(context).colorScheme.onSurface,
-                ),
-                onPressed: () async {
-                  await context.push(() => const ChangelogPage());
-                },
-                icon: const Icon(Icons.history),
-                label: Text(t.changelogPage.title),
-              ),
-            ),
-            const SizedBox(height: 80),
+            const SizedBox(height: 50),
           ],
         );
       },
@@ -634,82 +359,120 @@ class SettingsTab extends StatelessWidget {
   }
 }
 
-class _SettingsEntry extends StatelessWidget {
-  final String label;
+/// A pill card enclosing a single settings row
+class _SettingsPillCard extends StatelessWidget {
   final Widget child;
-  final String? description;
 
-  const _SettingsEntry({required this.label, required this.child, this.description});
+  const _SettingsPillCard({required this.child});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 15),
-      child: Row(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E2430) : const Color(0xFFF0F3F8),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06),
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+      child: child,
+    );
+  }
+}
+
+/// A group container wrapping multiple settings rows in one continuous rounded squircle card
+class _SettingsPillGroup extends StatelessWidget {
+  final List<Widget> children;
+
+  const _SettingsPillGroup({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E2430) : const Color(0xFFF0F3F8),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06),
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      child: Column(
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label),
-                if (description != null)
-                  Text(
-                    description!,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-                  ),
-              ],
+          for (int i = 0; i < children.length; i++) ...[
+            if (i > 0)
+              Divider(
+                color: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.05),
+                height: 1,
+              ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: children[i],
             ),
-          ),
-          const SizedBox(width: 10),
-          SizedBox(
-            width: 150,
-            child: child,
-          ),
+          ],
         ],
       ),
     );
   }
 }
 
-/// A specialized version of [_SettingsEntry].
-class _BooleanEntry extends StatelessWidget {
+/// Dropdown row with right-aligned rounded capsule button
+class _SettingsDropdownRow<T> extends StatelessWidget {
   final String label;
-  final bool value;
-  final ValueChanged<bool>? onChanged;
-  final String? description;
+  final T? value;
+  final List<DropdownMenuItem<T>> items;
+  final ValueChanged<T?>? onChanged;
 
-  const _BooleanEntry({
+  const _SettingsDropdownRow({
     required this.label,
     required this.value,
+    required this.items,
     required this.onChanged,
-    this.description,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return _SettingsEntry(
-      label: label,
-      description: description,
-      child: Stack(
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final capsuleBg = isDark ? const Color(0xFF2B3344) : const Color(0xFFE2E7F0);
+
+    return SizedBox(
+      height: 48,
+      child: Row(
         children: [
-          Container(
-            width: double.infinity,
-            height: 50,
-            decoration: BoxDecoration(
-              color: theme.inputDecorationTheme.fillColor,
-              borderRadius: theme.inputDecorationTheme.borderRadius,
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: textColor,
+              ),
             ),
           ),
-          Positioned.fill(
-            child: Center(
-              child: Switch(
+          Container(
+            height: 38,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            decoration: BoxDecoration(
+              color: capsuleBg,
+              borderRadius: BorderRadius.circular(19),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<T>(
                 value: value,
+                items: items,
                 onChanged: onChanged,
-                activeTrackColor: theme.colorScheme.primary,
-                activeThumbColor: theme.colorScheme.onPrimary,
-                inactiveThumbColor: theme.colorScheme.outline,
-                inactiveTrackColor: theme.colorScheme.surface,
+                icon: Icon(Icons.arrow_drop_down, color: textColor.withOpacity(0.7)),
+                dropdownColor: isDark ? const Color(0xFF1E2430) : Colors.white,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: textColor,
+                ),
               ),
             ),
           ),
@@ -719,13 +482,13 @@ class _BooleanEntry extends StatelessWidget {
   }
 }
 
-/// A specialized version of [_SettingsEntry].
-class _ButtonEntry extends StatelessWidget {
+/// Pill button row with right-aligned rounded capsule button
+class _SettingsPillButtonRow extends StatelessWidget {
   final String label;
   final String buttonLabel;
-  final void Function() onTap;
+  final VoidCallback onTap;
 
-  const _ButtonEntry({
+  const _SettingsPillButtonRow({
     required this.label,
     required this.buttonLabel,
     required this.onTap,
@@ -733,55 +496,97 @@ class _ButtonEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _SettingsEntry(
-      label: label,
-      child: TextButton(
-        style: TextButton.styleFrom(
-          backgroundColor: Theme.of(context).inputDecorationTheme.fillColor,
-          shape: RoundedRectangleBorder(borderRadius: Theme.of(context).inputDecorationTheme.borderRadius),
-          foregroundColor: Theme.of(context).colorScheme.onSurface,
-        ),
-        onPressed: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 5),
-          child: Text(
-            buttonLabel,
-            style: Theme.of(context).textTheme.titleMedium,
-            textAlign: TextAlign.center,
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final capsuleBg = isDark ? const Color(0xFF2B3344) : const Color(0xFFE2E7F0);
+
+    return SizedBox(
+      height: 48,
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: textColor,
+              ),
+            ),
           ),
-        ),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(19),
+              onTap: onTap,
+              child: Container(
+                height: 38,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: capsuleBg,
+                  borderRadius: BorderRadius.circular(19),
+                ),
+                child: Center(
+                  child: Text(
+                    buttonLabel,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: textColor,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _SettingsSection extends StatelessWidget {
-  final String title;
-  final List<Widget> children;
-  final EdgeInsets padding;
+/// Toggle row with adaptive switch matching mockup
+class _SettingsToggleRow extends StatelessWidget {
+  final String label;
+  final bool value;
+  final ValueChanged<bool>? onChanged;
 
-  const _SettingsSection({
-    required this.title,
-    required this.children,
-    this.padding = const EdgeInsets.only(bottom: 15),
+  const _SettingsToggleRow({
+    required this.label,
+    required this.value,
+    required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: padding,
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.only(left: 15, right: 15, top: 15),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 10),
-              ...children,
-            ],
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+
+    return SizedBox(
+      height: 48,
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: textColor,
+              ),
+            ),
           ),
-        ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeTrackColor: const Color(0xFF357AF6),
+            activeThumbColor: Colors.white,
+            inactiveTrackColor: isDark ? const Color(0xFF2B3344) : const Color(0xFFD0D7E3),
+            inactiveThumbColor: isDark ? Colors.white70 : Colors.white,
+          ),
+        ],
       ),
     );
   }

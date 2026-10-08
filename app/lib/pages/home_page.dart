@@ -16,9 +16,9 @@ import 'package:localsend_app/widget/responsive_builder.dart';
 import 'package:refena_flutter/refena_flutter.dart';
 
 enum HomeTab {
-  receive(Icons.wifi),
-  send(Icons.send),
-  settings(Icons.settings)
+  receive(Icons.file_download_outlined),
+  send(Icons.near_me_outlined),
+  settings(Icons.settings_outlined)
   ;
 
   const HomeTab(this.icon);
