@@ -3,6 +3,9 @@ name: Build Multiplatform Packages
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 env:
   FLUTTER_VERSION: "3.41.9"
 
@@ -54,11 +57,11 @@ jobs:
 
       - name: Upload Windows to Release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release upload v1.2.0-beta1 "build_output\windows\LocalTransfer-v1.2.0-beta1-windows-x64.zip" "build_output\windows\LocalTransfer-v1.2.0-beta1-windows-x64.exe" --clobber --repo smartworldarafath/Local-Transfer
 
-  # 2. Linux AppImage & Deb (x86_64)
+  # 2. Linux AppImage & Tar.gz (x86_64)
   build_linux:
     runs-on: ubuntu-22.04
     steps:
@@ -92,18 +95,57 @@ jobs:
           mkdir -p build_output/linux
           tar -czf build_output/linux/LocalTransfer-v1.2.0-beta1-linux-x86_64.tar.gz -C app/build/linux/x64/release/bundle .
 
+      # Package Linux AppImage
+      - name: Package AppImage
+        run: |
+          export APPIMAGETOOL_URL=https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          curl -L -o appimagetool.AppImage "$APPIMAGETOOL_URL"
+          chmod +x appimagetool.AppImage
+          ./appimagetool.AppImage --appimage-extract
+
+          mkdir -p AppDir/usr/bin
+          cp -r app/build/linux/x64/release/bundle/* AppDir/usr/bin/
+          cp app/assets/img/logo-512.png AppDir/localsend.png
+          cat << 'EOF' > AppDir/localsend.desktop
+          [Desktop Entry]
+          Name=Local Transfer
+          Exec=localsend_app
+          Icon=localsend
+          Type=Application
+          Categories=Network;FileTransfer;
+          EOF
+          chmod +x AppDir/usr/bin/localsend_app
+          cat << 'EOF' > AppDir/AppRun
+          #!/bin/sh
+          HERE="$(dirname "$(readlink -f "${0}")")"
+          exec "${HERE}/usr/bin/localsend_app" "$@"
+          EOF
+          chmod +x AppDir/AppRun
+
+          ARCH=x86_64 ./squashfs-root/AppRun AppDir build_output/linux/LocalTransfer-v1.2.0-beta1-linux-x86_64.AppImage
+
       - name: Upload Linux to Release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload v1.2.0-beta1 "build_output/linux/LocalTransfer-v1.2.0-beta1-linux-x86_64.tar.gz" --clobber --repo smartworldarafath/Local-Transfer
+          gh release upload v1.2.0-beta1 "build_output/linux/LocalTransfer-v1.2.0-beta1-linux-x86_64.tar.gz" "build_output/linux/LocalTransfer-v1.2.0-beta1-linux-x86_64.AppImage" --clobber --repo smartworldarafath/Local-Transfer
 
-  # 3. macOS DMG & App
+  # 3. macOS DMG & Zip (unsigned standalone)
   build_macos:
     runs-on: macos-14
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Strip proprietary storekit dependencies
+        run: |
+          bash support/scripts/remove_proprietary_dependencies.sh
+
+      - name: Strip team ID for unsigned build
+        run: |
+          sed -i '' 's/DEVELOPMENT_TEAM = 3W7H4PYMCV;/DEVELOPMENT_TEAM = "";/g' app/macos/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/CODE_SIGN_IDENTITY = "Mac Developer";/CODE_SIGN_IDENTITY = "-";/g' app/macos/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' app/macos/Runner.xcodeproj/project.pbxproj
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -120,27 +162,46 @@ jobs:
 
       - name: Build macOS Release
         working-directory: app
-        run: flutter build macos --release
+        run: flutter build macos --release --no-codesign
 
-      - name: Create macOS zip
+      - name: Package macOS DMG & Zip
         run: |
+          brew install create-dmg || true
           mkdir -p build_output/macos
           cd app/build/macos/Build/Products/Release
+          # Ad-hoc sign app
+          codesign --force --deep --sign - LocalSend.app
           zip -r -y ../../../../../build_output/macos/LocalTransfer-v1.2.0-beta1-macos.zip LocalSend.app
           cd ../../../../../
+          create-dmg \
+            --volname "Local Transfer" \
+            --window-size 500 300 \
+            --icon LocalSend.app 130 110 \
+            --app-drop-link 360 110 \
+            "build_output/macos/LocalTransfer-v1.2.0-beta1-macos.dmg" \
+            app/build/macos/Build/Products/Release/LocalSend.app || true
 
       - name: Upload macOS to Release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload v1.2.0-beta1 "build_output/macos/LocalTransfer-v1.2.0-beta1-macos.zip" --clobber --repo smartworldarafath/Local-Transfer
+          gh release upload v1.2.0-beta1 "build_output/macos/LocalTransfer-v1.2.0-beta1-macos.zip" "build_output/macos/LocalTransfer-v1.2.0-beta1-macos.dmg" --clobber --repo smartworldarafath/Local-Transfer
 
-  # 4. iOS / iPadOS IPA (unsigned payload for AltStore / Sideloadly / TrollStore)
+  # 4. iOS & iPadOS IPA (Sideload payload)
   build_ios:
     runs-on: macos-14
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Strip proprietary storekit dependencies
+        run: |
+          bash support/scripts/remove_proprietary_dependencies.sh
+
+      - name: Strip team ID for unsigned build
+        run: |
+          sed -i '' 's/DEVELOPMENT_TEAM = 3W7H4PYMCV;/DEVELOPMENT_TEAM = "";/g' app/ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' app/ios/Runner.xcodeproj/project.pbxproj
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -169,6 +230,6 @@ jobs:
 
       - name: Upload iOS/iPadOS IPA to Release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release upload v1.2.0-beta1 "build_output/ios/LocalTransfer-v1.2.0-beta1-ios-universal.ipa" --clobber --repo smartworldarafath/Local-Transfer
