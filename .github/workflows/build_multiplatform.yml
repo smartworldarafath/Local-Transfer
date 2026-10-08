@@ -186,30 +186,29 @@ jobs:
       - name: Package macOS DMG & Zip
         run: |
           brew install create-dmg || true
-          mkdir -p build_output/macos
-          cd app/build/macos/Build/Products/Release
+          mkdir -p "$GITHUB_WORKSPACE/build_output/macos"
+          cd "$GITHUB_WORKSPACE/app/build/macos/Build/Products/Release"
           # Ad-hoc sign app
           codesign --force --deep --sign - LocalSend.app
-          zip -r -y ../../../../../build_output/macos/LocalTransfer-v1.2.0-beta1-macos.zip LocalSend.app
-          cd ../../../../../
+          zip -r -y "$GITHUB_WORKSPACE/build_output/macos/LocalTransfer-v1.2.0-beta1-macos.zip" LocalSend.app
           if command -v create-dmg &> /dev/null; then
             create-dmg \
               --volname "Local Transfer" \
               --window-size 500 300 \
               --icon LocalSend.app 130 110 \
               --app-drop-link 360 110 \
-              "build_output/macos/LocalTransfer-v1.2.0-beta1-macos.dmg" \
-              app/build/macos/Build/Products/Release/LocalSend.app || \
-            hdiutil create -volname "Local Transfer" -srcfolder "app/build/macos/Build/Products/Release/LocalSend.app" -ov -format UDZO "build_output/macos/LocalTransfer-v1.2.0-beta1-macos.dmg"
+              "$GITHUB_WORKSPACE/build_output/macos/LocalTransfer-v1.2.0-beta1-macos.dmg" \
+              LocalSend.app || \
+            hdiutil create -volname "Local Transfer" -srcfolder LocalSend.app -ov -format UDZO "$GITHUB_WORKSPACE/build_output/macos/LocalTransfer-v1.2.0-beta1-macos.dmg"
           else
-            hdiutil create -volname "Local Transfer" -srcfolder "app/build/macos/Build/Products/Release/LocalSend.app" -ov -format UDZO "build_output/macos/LocalTransfer-v1.2.0-beta1-macos.dmg"
+            hdiutil create -volname "Local Transfer" -srcfolder LocalSend.app -ov -format UDZO "$GITHUB_WORKSPACE/build_output/macos/LocalTransfer-v1.2.0-beta1-macos.dmg"
           fi
 
       - name: Upload macOS to Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload v1.2.0-beta1 "build_output/macos/LocalTransfer-v1.2.0-beta1-macos.zip" "build_output/macos/LocalTransfer-v1.2.0-beta1-macos.dmg" --clobber --repo smartworldarafath/Local-Transfer
+          gh release upload v1.2.0-beta1 "$GITHUB_WORKSPACE/build_output/macos/LocalTransfer-v1.2.0-beta1-macos.zip" "$GITHUB_WORKSPACE/build_output/macos/LocalTransfer-v1.2.0-beta1-macos.dmg" --clobber --repo smartworldarafath/Local-Transfer
 
   # 4. iOS & iPadOS IPA (Sideload payload)
   build_ios:
