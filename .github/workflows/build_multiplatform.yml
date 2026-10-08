@@ -174,7 +174,10 @@ jobs:
         working-directory: app
         run: |
           flutter pub get
-          cd macos && pod install || true
+          cd macos
+          rm -rf Podfile.lock Pods
+          pod install --repo-update || true
+          cd ..
 
       - name: Build macOS Release
         working-directory: app
