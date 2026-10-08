@@ -2,6 +2,19 @@ name: Build Multiplatform Packages
 
 on:
   workflow_dispatch:
+    inputs:
+      platforms:
+        description: "Platforms to build"
+        required: true
+        default: "apple"
+        type: choice
+        options:
+          - "apple"
+          - "all"
+          - "macos"
+          - "ios"
+          - "windows"
+          - "linux"
 
 permissions:
   contents: write
@@ -12,6 +25,7 @@ env:
 jobs:
   # 1. Windows x64 Portable Zip & Installer
   build_windows:
+    if: "${{ github.event.inputs.platforms == 'all' || github.event.inputs.platforms == 'windows' }}"
     runs-on: windows-latest
     steps:
       - name: Enable long file paths
@@ -63,6 +77,7 @@ jobs:
 
   # 2. Linux AppImage & Tar.gz (x86_64)
   build_linux:
+    if: "${{ github.event.inputs.platforms == 'all' || github.event.inputs.platforms == 'linux' }}"
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
@@ -132,6 +147,7 @@ jobs:
 
   # 3. macOS DMG & Zip (unsigned standalone)
   build_macos:
+    if: "${{ github.event.inputs.platforms == 'all' || github.event.inputs.platforms == 'apple' || github.event.inputs.platforms == 'macos' || github.event.inputs.platforms == '' }}"
     runs-on: macos-14
     steps:
       - name: Checkout code
@@ -139,13 +155,11 @@ jobs:
 
       - name: Strip proprietary storekit dependencies
         run: |
-          bash support/scripts/remove_proprietary_dependencies.sh
+          python3 support/scripts/remove_proprietary_dependencies.py
 
-      - name: Strip team ID for unsigned build
+      - name: Setup Signing Configuration
         run: |
-          sed -i '' 's/DEVELOPMENT_TEAM = 3W7H4PYMCV;/DEVELOPMENT_TEAM = "";/g' app/macos/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/CODE_SIGN_IDENTITY = "Mac Developer";/CODE_SIGN_IDENTITY = "-";/g' app/macos/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' app/macos/Runner.xcodeproj/project.pbxproj
+          python3 support/scripts/setup_apple_build_configs.py macos
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -158,11 +172,13 @@ jobs:
 
       - name: Flutter Dependencies
         working-directory: app
-        run: flutter pub get
+        run: |
+          flutter pub get
+          cd macos && pod install || true
 
       - name: Build macOS Release
         working-directory: app
-        run: flutter build macos --release --no-codesign
+        run: flutter build macos --release
 
       - name: Package macOS DMG & Zip
         run: |
@@ -173,13 +189,18 @@ jobs:
           codesign --force --deep --sign - LocalSend.app
           zip -r -y ../../../../../build_output/macos/LocalTransfer-v1.2.0-beta1-macos.zip LocalSend.app
           cd ../../../../../
-          create-dmg \
-            --volname "Local Transfer" \
-            --window-size 500 300 \
-            --icon LocalSend.app 130 110 \
-            --app-drop-link 360 110 \
-            "build_output/macos/LocalTransfer-v1.2.0-beta1-macos.dmg" \
-            app/build/macos/Build/Products/Release/LocalSend.app || true
+          if command -v create-dmg &> /dev/null; then
+            create-dmg \
+              --volname "Local Transfer" \
+              --window-size 500 300 \
+              --icon LocalSend.app 130 110 \
+              --app-drop-link 360 110 \
+              "build_output/macos/LocalTransfer-v1.2.0-beta1-macos.dmg" \
+              app/build/macos/Build/Products/Release/LocalSend.app || \
+            hdiutil create -volname "Local Transfer" -srcfolder "app/build/macos/Build/Products/Release/LocalSend.app" -ov -format UDZO "build_output/macos/LocalTransfer-v1.2.0-beta1-macos.dmg"
+          else
+            hdiutil create -volname "Local Transfer" -srcfolder "app/build/macos/Build/Products/Release/LocalSend.app" -ov -format UDZO "build_output/macos/LocalTransfer-v1.2.0-beta1-macos.dmg"
+          fi
 
       - name: Upload macOS to Release
         env:
@@ -189,6 +210,7 @@ jobs:
 
   # 4. iOS & iPadOS IPA (Sideload payload)
   build_ios:
+    if: "${{ github.event.inputs.platforms == 'all' || github.event.inputs.platforms == 'apple' || github.event.inputs.platforms == 'ios' || github.event.inputs.platforms == '' }}"
     runs-on: macos-14
     steps:
       - name: Checkout code
@@ -196,12 +218,11 @@ jobs:
 
       - name: Strip proprietary storekit dependencies
         run: |
-          bash support/scripts/remove_proprietary_dependencies.sh
+          python3 support/scripts/remove_proprietary_dependencies.py
 
-      - name: Strip team ID for unsigned build
+      - name: Setup Signing Configuration
         run: |
-          sed -i '' 's/DEVELOPMENT_TEAM = 3W7H4PYMCV;/DEVELOPMENT_TEAM = "";/g' app/ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' app/ios/Runner.xcodeproj/project.pbxproj
+          python3 support/scripts/setup_apple_build_configs.py ios
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -214,7 +235,11 @@ jobs:
 
       - name: Flutter Dependencies
         working-directory: app
-        run: flutter pub get
+        run: |
+          flutter pub get
+          cd ios
+          rm -rf Podfile.lock Pods
+          pod install --repo-update
 
       - name: Build iOS No-Codesign
         working-directory: app
@@ -225,7 +250,7 @@ jobs:
           mkdir -p build_output/ios/Payload
           cp -r app/build/ios/iphoneos/Runner.app build_output/ios/Payload/
           cd build_output/ios
-          zip -r LocalTransfer-v1.2.0-beta1-ios-universal.ipa Payload
+          zip -r -y LocalTransfer-v1.2.0-beta1-ios-universal.ipa Payload
           cd ../../
 
       - name: Upload iOS/iPadOS IPA to Release
