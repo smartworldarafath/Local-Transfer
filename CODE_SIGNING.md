@@ -10,8 +10,8 @@ Signed Windows files show **SignPath Foundation** as the publisher because the c
 
 ## Team roles
 
-- Committers and reviewers: [@Tienisto](https://github.com/Tienisto)
-- Approvers: [@Tienisto](https://github.com/Tienisto)
+- Committers and reviewers: [@smartworldarafath](https://github.com/smartworldarafath)
+- Approvers: [@smartworldarafath](https://github.com/smartworldarafath)
 
 ## Privacy
 

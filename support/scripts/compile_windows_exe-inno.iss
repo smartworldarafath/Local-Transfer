@@ -13,7 +13,7 @@
 
 #define MyAppName "LocalSend"
 #define MyAppVersion "1.18.2"
-#define MyAppPublisher "Tien Do Nam"
+#define MyAppPublisher "smartworldarafath"
 #define MyAppURL "https://localsend.org"
 #define MyAppExeName "localsend_app.exe"
 #define MyAppMsixHelper "localsend_msix_helper.msix"
