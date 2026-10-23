@@ -66,14 +66,14 @@ Git based distribution:
 
 | Channel        | Repository          | Maintainer                                         |
 |----------------|---------------------|----------------------------------------------------|
-| [Winget][]     | [Winget Repo][]     | [@sitiom][], [@Tienisto], Github Actions           |
-| [Scoop][]      | [Scoop Repo][]      | [@sitiom][], [@Tienisto], Github Actions           |
+| [Winget][]     | [Winget Repo][]     | [@sitiom][], [@smartworldarafath], Github Actions           |
+| [Scoop][]      | [Scoop Repo][]      | [@sitiom][], [@smartworldarafath], Github Actions           |
 | [Chocolatey][] | [Chocolatey Repo][] | [@brogers5][]                                      |
-| [Homebrew][]   | [Homebrew Repo][]   | [@Tienisto][], Github Actions                      |
-| [Flathub][]    | [Flathub Repo][]    | [@proletarius101][], [@Tienisto][], Github Actions |
+| [Homebrew][]   | [Homebrew Repo][]   | [@smartworldarafath][], Github Actions                      |
+| [Flathub][]    | [Flathub Repo][]    | [@proletarius101][], [@smartworldarafath][], Github Actions |
 | [AUR][]        | [AUR Repo][]        | [@Nixuge][]                                        |
 | [Nixpkgs][]    | [Nixpkgs Repo][]    | [@sikmir][], [@linsui][]                           |
-| [F-Droid][]    | [F-Droid Repo][]    | [@linsui][], [@Tienisto][], [F-Droid CI][]         |
+| [F-Droid][]    | [F-Droid Repo][]    | [@linsui][], [@smartworldarafath][], [F-Droid CI][]         |
 | [Snap][]       | [Snap Repo][]       | [@thatLeaflet][]                                   |
 
 [winget]: https://github.com/microsoft/winget-pkgs/tree/master/manifests/l/LocalSend/LocalSend
@@ -99,9 +99,9 @@ Manual distribution:
 
 | Channel        | Maintainer                               |
 |----------------|------------------------------------------|
-| [App Store][]  | [@Tienisto](https://github.com/Tienisto) |
-| [Play Store][] | [@Tienisto](https://github.com/Tienisto) |
-| [Amazon][]     | [@Tienisto](https://github.com/Tienisto) |
+| [App Store][]  | [@smartworldarafath](https://github.com/smartworldarafath) |
+| [Play Store][] | [@smartworldarafath](https://github.com/smartworldarafath) |
+| [Amazon][]     | [@smartworldarafath](https://github.com/smartworldarafath) |
 
 [app store]: https://apps.apple.com/us/app/localsend/id1661733229
 [play store]: https://play.google.com/store/apps/details?id=org.localsend.localsend_app
@@ -111,16 +111,16 @@ Binary distribution:
 
 | Type        | Maintainer    | Credits                      |
 |-------------|---------------|------------------------------|
-| Windows ZIP | [@Tienisto][] |                              |
-| MSIX        | [@Tienisto][] |                              |
-| EXE         | [@Tienisto][] |                              |
-| APK         | [@Tienisto][] |                              |
-| TAR         | [@Tienisto][] |                              |
-| DEB         | [@Tienisto][] |                              |
-| AppImage    | [@Tienisto][] | [@TheGB0077][]               |
-| DMG         | [@Tienisto][] |                              |
+| Windows ZIP | [@smartworldarafath][] |                              |
+| MSIX        | [@smartworldarafath][] |                              |
+| EXE         | [@smartworldarafath][] |                              |
+| APK         | [@smartworldarafath][] |                              |
+| TAR         | [@smartworldarafath][] |                              |
+| DEB         | [@smartworldarafath][] |                              |
+| AppImage    | [@smartworldarafath][] | [@TheGB0077][]               |
+| DMG         | [@smartworldarafath][] |                              |
 
-[@Tienisto]: https://github.com/Tienisto
+[@smartworldarafath]: https://github.com/smartworldarafath
 [@TheGB0077]: https://github.com/TheGB0077
 [@sitiom]: https://github.com/sitiom
 [@Nixuge]: https://github.com/Nixuge
