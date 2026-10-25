@@ -93,8 +93,16 @@ class RegisterDeviceAction extends AsyncReduxAction<NearbyDevicesService, Nearby
     } else {
       await Future.microtask(() {});
     }
+    final newDevices = {...state.devices};
+    newDevices.removeWhere((key, existing) =>
+      key != device.fingerprint &&
+      existing.ip == device.ip &&
+      existing.port == device.port,
+    );
+    newDevices[device.fingerprint] = device;
+
     return state.copyWith(
-      devices: {...state.devices}..update(device.fingerprint, (_) => device, ifAbsent: () => device),
+      devices: newDevices,
     );
   }
 }

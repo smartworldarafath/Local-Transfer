@@ -4,6 +4,7 @@ import 'package:localsend_app/config/theme.dart';
 import 'package:localsend_app/gen/strings.g.dart';
 import 'package:localsend_app/model/persistence/color_mode.dart';
 import 'package:localsend_app/pages/about/about_page.dart';
+import 'package:localsend_app/pages/app_theme_page.dart';
 import 'package:localsend_app/pages/app_updates_page.dart';
 import 'package:localsend_app/pages/changelog_page.dart';
 import 'package:localsend_app/pages/donation/donation_page.dart';
@@ -133,6 +134,16 @@ class SettingsTab extends StatelessWidget {
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: textColor.withOpacity(0.65),
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            // App Theme Card
+            _SettingsPillCard(
+              child: _SettingsPillButtonRow(
+                label: 'App Theme',
+                buttonLabel: 'Customize',
+                onTap: () => context.push(() => const AppThemePage()),
               ),
             ),
             const SizedBox(height: 10),
@@ -341,7 +352,7 @@ class SettingsTab extends StatelessWidget {
               children: [
                 _SettingsPillButtonRow(
                   label: 'Version',
-                  buttonLabel: 'v1.2.0 (Beta 1)',
+                  buttonLabel: 'v1.2.5 (Beta 2)',
                   onTap: () => context.push(() => const AboutPage()),
                 ),
                 _SettingsPillButtonRow(

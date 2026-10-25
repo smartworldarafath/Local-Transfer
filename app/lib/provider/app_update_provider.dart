@@ -150,7 +150,7 @@ class AppUpdateNotifier extends Notifier<AppUpdateState> {
         return;
       }
 
-      final currentVersion = ref.read(versionProvider).data?.version ?? '1.2.0';
+      final currentVersion = ref.read(versionProvider).data?.version ?? '1.2.5';
       final latest = AppReleaseInfo.fromJson(releasesJson.first as Map<String, dynamic>);
 
       // Check if latest version tag is newer than current version

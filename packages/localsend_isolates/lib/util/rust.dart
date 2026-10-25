@@ -104,10 +104,14 @@ extension HumanErrorMessageExt on Object {
   /// showing the status code and server message if available.
   String get humanErrorMessage {
     final e = this;
+    final errStr = e.toString();
+    if (errStr.contains('fingerprint mismatch')) {
+      return 'Security verification error: Recipient device certificate changed. Please refresh discovery and try again.';
+    }
     return switch (e) {
       rust_http.RsHttpClientError_StatusCode(:final status, :final message) when message != null => '[$status] $message',
       AnyhowException(:final message) => message,
-      _ => e.toString(),
+      _ => errStr,
     };
   }
 }

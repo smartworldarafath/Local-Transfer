@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -25,6 +24,7 @@ class LiquidGlassMaterial extends StatelessWidget {
   final Border? border;
   final BoxShadow? shadow;
   final bool showSpecularBorder;
+  final bool useGradient;
 
   const LiquidGlassMaterial({
     super.key,
@@ -37,6 +37,7 @@ class LiquidGlassMaterial extends StatelessWidget {
     this.border,
     this.shadow,
     this.showSpecularBorder = true,
+    this.useGradient = false,
   });
 
   @override
@@ -44,23 +45,26 @@ class LiquidGlassMaterial extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Angle to radiant endpoints
-    final rad = angleDegrees * math.pi / 180.0;
-    final beginAlignment = Alignment(-math.cos(rad), -math.sin(rad));
-    final endAlignment = Alignment(math.cos(rad), math.sin(rad));
-
     final baseTint = tintColor ??
         (isDark
             ? Colors.white.withOpacity(0.08 * (intensity / 0.75))
             : Colors.white.withOpacity(0.55 * (intensity / 0.75)));
 
-    final specularHighlight = isDark
-        ? Colors.white.withOpacity(0.18 * (intensity / 0.75))
-        : Colors.white.withOpacity(0.40 * (intensity / 0.75));
-
-    final shadowTint = isDark
-        ? Colors.black.withOpacity(0.25)
-        : Colors.black.withOpacity(0.06);
+    // Subtle vertical light gradient if requested, avoiding harsh horizontal color splits
+    final Gradient? gradient = useGradient
+        ? LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color.alphaBlend(
+                isDark ? Colors.white.withOpacity(0.06) : Colors.white.withOpacity(0.12),
+                baseTint,
+              ),
+              baseTint,
+            ],
+            stops: const [0.0, 1.0],
+          )
+        : null;
 
     return ClipRRect(
       borderRadius: borderRadius,
@@ -69,24 +73,14 @@ class LiquidGlassMaterial extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: borderRadius,
-            color: baseTint,
-            gradient: LinearGradient(
-              begin: beginAlignment,
-              end: endAlignment,
-              colors: [
-                specularHighlight,
-                baseTint,
-                baseTint.withOpacity(baseTint.opacity * 0.7),
-                shadowTint,
-              ],
-              stops: const [0.0, 0.35, 0.75, 1.0],
-            ),
+            color: gradient == null ? baseTint : null,
+            gradient: gradient,
             border: showSpecularBorder
                 ? Border.all(
                     color: isDark
-                        ? Colors.white.withOpacity(0.22 * (intensity / 0.75))
-                        : Colors.white.withOpacity(0.65 * (intensity / 0.75)),
-                    width: 1.2,
+                        ? Colors.white.withOpacity(0.14 * (intensity / 0.75))
+                        : Colors.black.withOpacity(0.08),
+                    width: 1.0,
                   )
                 : border,
             boxShadow: shadow != null

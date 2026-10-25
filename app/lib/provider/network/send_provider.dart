@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:localsend_app/model/cross_file.dart';
 import 'package:localsend_app/model/send_mode.dart';
@@ -11,7 +12,9 @@ import 'package:localsend_app/pages/progress_page.dart';
 import 'package:localsend_app/pages/send_page.dart';
 import 'package:localsend_app/provider/device_info_provider.dart';
 import 'package:localsend_app/provider/file_transfer_provider.dart';
+import 'package:localsend_app/provider/favorites_provider.dart';
 import 'package:localsend_app/provider/http_provider.dart';
+import 'package:localsend_app/provider/network/nearby_devices_provider.dart';
 import 'package:localsend_app/provider/selection/selected_sending_files_provider.dart';
 import 'package:localsend_app/provider/settings_provider.dart';
 import 'package:localsend_app/widget/dialogs/pin_dialog.dart';
@@ -92,7 +95,8 @@ class SendNotifier extends Notifier<Map<String, SendSessionState>> {
   }) async {
     // Pinned to the device the user picked, so the request is not sent at all
     // if someone else answers on that address.
-    final client = ref.read(httpProvider).pinnedTo(target.fingerprint);
+    var client = ref.read(httpProvider).pinnedTo(target.fingerprint);
+    var currentTarget = target;
     final sessionId = _uuid.v4();
     final createChecksums = ref.read(settingsProvider).createChecksums;
 
@@ -259,9 +263,9 @@ class SendNotifier extends Notifier<Map<String, SendSessionState>> {
         invalidPin = false;
         try {
           response = await client.prepareUpload(
-            protocol: target.getProtocolType(),
-            ip: target.ip!,
-            port: target.port,
+            protocol: currentTarget.getProtocolType(),
+            ip: currentTarget.ip!,
+            port: currentTarget.port,
             payload: requestDto,
             // The peer is already verified during the TLS handshake by the
             // fingerprint the client is pinned to.
@@ -332,14 +336,73 @@ class SendNotifier extends Notifier<Map<String, SendSessionState>> {
               return;
           }
         } catch (e) {
-          state = state.updateSession(
-            sessionId: sessionId,
-            state: (s) => s?.copyWith(
-              status: SessionStatus.finishedWithErrors,
-              errorMessage: e.humanErrorMessage,
-            ),
-          );
-          return;
+          if (e.toString().contains('fingerprint mismatch')) {
+            _logger.info('Detected certificate fingerprint mismatch for ${currentTarget.ip}:${currentTarget.port}. Auto-recovering...');
+            try {
+              final registerResponse = await ref
+                  .read(httpProvider)
+                  .discovery
+                  .register(
+                    protocol: currentTarget.getProtocolType(),
+                    ip: currentTarget.ip!,
+                    port: currentTarget.port,
+                    payload: requestDto.info,
+                  );
+              final updatedDevice = registerResponse.body.toDevice(
+                currentTarget.ip!,
+                currentTarget.port,
+                currentTarget.https,
+              );
+
+              currentTarget = updatedDevice;
+              state = state.updateSession(
+                sessionId: sessionId,
+                state: (s) => s?.copyWith(target: updatedDevice),
+              );
+
+              await ref.redux(nearbyDevicesProvider).dispatchAsync(RegisterDeviceAction(updatedDevice));
+
+              final favorite = ref.read(favoritesProvider).firstWhereOrNull(
+                (f) => (f.ip == updatedDevice.ip && f.port == updatedDevice.port) || f.alias == updatedDevice.alias,
+              );
+              if (favorite != null) {
+                await ref.redux(favoritesProvider).dispatchAsync(
+                  UpdateFavoriteAction(favorite.copyWith(fingerprint: updatedDevice.fingerprint)),
+                );
+              }
+
+              client = ref.read(httpProvider).pinnedTo(updatedDevice.fingerprint);
+
+              response = await client.prepareUpload(
+                protocol: currentTarget.getProtocolType(),
+                ip: currentTarget.ip!,
+                port: currentTarget.port,
+                payload: requestDto,
+                publicKey: null,
+                pin: pin,
+                cancelToken: prepareUploadCancelToken,
+              );
+            } catch (recoveryError) {
+              _logger.warning('Auto-recovery for fingerprint mismatch failed', recoveryError);
+              state = state.updateSession(
+                sessionId: sessionId,
+                state: (s) => s?.copyWith(
+                  status: SessionStatus.finishedWithErrors,
+                  errorMessage: e.humanErrorMessage,
+                ),
+              );
+              return;
+            }
+          } else {
+            state = state.updateSession(
+              sessionId: sessionId,
+              state: (s) => s?.copyWith(
+                status: SessionStatus.finishedWithErrors,
+                errorMessage: e.humanErrorMessage,
+              ),
+            );
+            return;
+          }
         }
       } while (invalidPin);
     } finally {

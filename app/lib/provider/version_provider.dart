@@ -9,7 +9,7 @@ class VersionData {
   VersionData({
     required this.version,
     required this.buildNumber,
-  }) : combinedString = 'v1.2.0 (Beta 1)';
+  }) : combinedString = 'v1.2.5 (Beta 2)';
 }
 
 final versionProvider = FutureProvider((ref) async {

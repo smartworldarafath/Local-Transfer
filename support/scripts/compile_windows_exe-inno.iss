@@ -12,7 +12,7 @@
 #endif
 
 #define MyAppName "LocalSend"
-#define MyAppVersion "1.18.2"
+#define MyAppVersion "1.2.5"
 #define MyAppPublisher "smartworldarafath"
 #define MyAppURL "https://localsend.org"
 #define MyAppExeName "localsend_app.exe"

@@ -96,7 +96,7 @@ class AppUpdatesPage extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Version ${versionData?.combinedString ?? "v1.2.0 (Beta 1)"}',
+                              'Version ${versionData?.combinedString ?? "v1.2.5 (Beta 2)"}',
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: subtextColor,
                               ),
