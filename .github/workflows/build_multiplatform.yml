@@ -6,15 +6,21 @@ on:
       platforms:
         description: "Platforms to build"
         required: true
-        default: "apple"
+        default: "all"
         type: choice
         options:
-          - "apple"
           - "all"
-          - "macos"
-          - "ios"
+          - "android"
           - "windows"
           - "linux"
+          - "macos"
+          - "ios"
+          - "apple"
+      release_tag:
+        description: "Release tag"
+        required: true
+        default: "v1.2.5-beta2"
+        type: string
 
 permissions:
   contents: write
@@ -23,7 +29,51 @@ env:
   FLUTTER_VERSION: "3.41.9"
 
 jobs:
-  # 1. Windows x64 Portable Zip & Installer
+  # 1. Android APK (Universal & Per-ABI)
+  build_android:
+    if: "${{ github.event.inputs.platforms == 'all' || github.event.inputs.platforms == 'android' }}"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: "stable"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Flutter Dependencies
+        working-directory: app
+        run: flutter pub get
+
+      - name: Build Android APK
+        working-directory: app
+        run: flutter build apk --release
+
+      - name: Package & Rename APK
+        run: |
+          mkdir -p build_output/android
+          TAG="${{ github.event.inputs.release_tag || 'v1.2.5-beta2' }}"
+          cp app/build/app/outputs/flutter-apk/app-release.apk "build_output/android/LocalTransfer-${TAG}.apk"
+
+      - name: Upload Android to Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ github.event.inputs.release_tag || 'v1.2.5-beta2' }}"
+          gh release upload "$TAG" "build_output/android/LocalTransfer-${TAG}.apk" --clobber --repo smartworldarafath/Local-Transfer
+
+  # 2. Windows x64 Portable Zip & Installer
   build_windows:
     if: "${{ github.event.inputs.platforms == 'all' || github.event.inputs.platforms == 'windows' }}"
     runs-on: windows-latest
@@ -54,28 +104,27 @@ jobs:
         working-directory: app
         run: flutter build windows --release
 
-      - name: Package Windows ZIP
+      - name: Package Windows ZIP & Installer
         run: |
+          $tag = "${{ github.event.inputs.release_tag || 'v1.2.5-beta2' }}"
           New-Item -ItemType Directory -Force -Path "build_output\windows" | Out-Null
-          Compress-Archive -Path "app\build\windows\x64\runner\Release\*" -DestinationPath "build_output\windows\LocalTransfer-v1.2.0-beta1-windows-x64.zip" -Force
-
-      - name: Package Inno Setup Installer
-        run: |
+          Compress-Archive -Path "app\build\windows\x64\runner\Release\*" -DestinationPath "build_output\windows\LocalTransfer-$tag-windows-x64.zip" -Force
           New-Item -ItemType Directory -Force -Path "${{ runner.temp }}\inno" | Out-Null
           Copy-Item -Path "app\build\windows\x64\runner\Release\*" -Destination "${{ runner.temp }}\inno" -Recurse
           Copy-Item -Path "app\assets\packaging\logo.ico" -Destination "${{ runner.temp }}\inno"
           Copy-Item -Path "support\build\windows\x64\*" -Destination "${{ runner.temp }}\inno" -Recurse
           New-Item -ItemType Directory -Force -Path "${{ runner.temp }}\inno-result" | Out-Null
           iscc /DSkipSignTool /DSkipMsixHelper "/DPayloadDir=${{ runner.temp }}\inno" "/DResultDir=${{ runner.temp }}\inno-result" support\scripts\compile_windows_exe-inno.iss
-          Copy-Item -Path "${{ runner.temp }}\inno-result\localsend.exe" -Destination "build_output\windows\LocalTransfer-v1.2.0-beta1-windows-x64.exe" -Force
+          Copy-Item -Path "${{ runner.temp }}\inno-result\localsend.exe" -Destination "build_output\windows\LocalTransfer-$tag-windows-x64.exe" -Force
 
       - name: Upload Windows to Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload v1.2.0-beta1 "build_output\windows\LocalTransfer-v1.2.0-beta1-windows-x64.zip" "build_output\windows\LocalTransfer-v1.2.0-beta1-windows-x64.exe" --clobber --repo smartworldarafath/Local-Transfer
+          $tag = "${{ github.event.inputs.release_tag || 'v1.2.5-beta2' }}"
+          gh release upload "$tag" "build_output\windows\LocalTransfer-$tag-windows-x64.zip" "build_output\windows\LocalTransfer-$tag-windows-x64.exe" --clobber --repo smartworldarafath/Local-Transfer
 
-  # 2. Linux AppImage & Tar.gz (x86_64)
+  # 3. Linux AppImage & Tar.gz (x86_64)
   build_linux:
     if: "${{ github.event.inputs.platforms == 'all' || github.event.inputs.platforms == 'linux' }}"
     runs-on: ubuntu-22.04
@@ -105,14 +154,12 @@ jobs:
         working-directory: app
         run: flutter build linux --release
 
-      - name: Package Linux Tar.gz
+      - name: Package Linux Tar.gz & AppImage
         run: |
+          TAG="${{ github.event.inputs.release_tag || 'v1.2.5-beta2' }}"
           mkdir -p build_output/linux
-          tar -czf build_output/linux/LocalTransfer-v1.2.0-beta1-linux-x86_64.tar.gz -C app/build/linux/x64/release/bundle .
+          tar -czf "build_output/linux/LocalTransfer-${TAG}-linux-x86_64.tar.gz" -C app/build/linux/x64/release/bundle .
 
-      # Package Linux AppImage
-      - name: Package AppImage
-        run: |
           export APPIMAGETOOL_URL=https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
           curl -L -o appimagetool.AppImage "$APPIMAGETOOL_URL"
           chmod +x appimagetool.AppImage
@@ -137,15 +184,16 @@ jobs:
           EOF
           chmod +x AppDir/AppRun
 
-          ARCH=x86_64 ./squashfs-root/AppRun AppDir build_output/linux/LocalTransfer-v1.2.0-beta1-linux-x86_64.AppImage
+          ARCH=x86_64 ./squashfs-root/AppRun AppDir "build_output/linux/LocalTransfer-${TAG}-linux-x86_64.AppImage"
 
       - name: Upload Linux to Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload v1.2.0-beta1 "build_output/linux/LocalTransfer-v1.2.0-beta1-linux-x86_64.tar.gz" "build_output/linux/LocalTransfer-v1.2.0-beta1-linux-x86_64.AppImage" --clobber --repo smartworldarafath/Local-Transfer
+          TAG="${{ github.event.inputs.release_tag || 'v1.2.5-beta2' }}"
+          gh release upload "$TAG" "build_output/linux/LocalTransfer-${TAG}-linux-x86_64.tar.gz" "build_output/linux/LocalTransfer-${TAG}-linux-x86_64.AppImage" --clobber --repo smartworldarafath/Local-Transfer
 
-  # 3. macOS DMG & Zip (unsigned standalone)
+  # 4. macOS DMG & Zip (unsigned standalone)
   build_macos:
     if: "${{ github.event.inputs.platforms == 'all' || github.event.inputs.platforms == 'apple' || github.event.inputs.platforms == 'macos' || github.event.inputs.platforms == '' }}"
     runs-on: macos-14
@@ -185,32 +233,33 @@ jobs:
 
       - name: Package macOS DMG & Zip
         run: |
+          TAG="${{ github.event.inputs.release_tag || 'v1.2.5-beta2' }}"
           brew install create-dmg || true
           mkdir -p "$GITHUB_WORKSPACE/build_output/macos"
           cd "$GITHUB_WORKSPACE/app/build/macos/Build/Products/Release"
-          # Ad-hoc sign app
           codesign --force --deep --sign - LocalSend.app
-          zip -r -y "$GITHUB_WORKSPACE/build_output/macos/LocalTransfer-v1.2.0-beta1-macos.zip" LocalSend.app
+          zip -r -y "$GITHUB_WORKSPACE/build_output/macos/LocalTransfer-${TAG}-macos.zip" LocalSend.app
           if command -v create-dmg &> /dev/null; then
             create-dmg \
               --volname "Local Transfer" \
               --window-size 500 300 \
               --icon LocalSend.app 130 110 \
               --app-drop-link 360 110 \
-              "$GITHUB_WORKSPACE/build_output/macos/LocalTransfer-v1.2.0-beta1-macos.dmg" \
+              "$GITHUB_WORKSPACE/build_output/macos/LocalTransfer-${TAG}-macos.dmg" \
               LocalSend.app || \
-            hdiutil create -volname "Local Transfer" -srcfolder LocalSend.app -ov -format UDZO "$GITHUB_WORKSPACE/build_output/macos/LocalTransfer-v1.2.0-beta1-macos.dmg"
+            hdiutil create -volname "Local Transfer" -srcfolder LocalSend.app -ov -format UDZO "$GITHUB_WORKSPACE/build_output/macos/LocalTransfer-${TAG}-macos.dmg"
           else
-            hdiutil create -volname "Local Transfer" -srcfolder LocalSend.app -ov -format UDZO "$GITHUB_WORKSPACE/build_output/macos/LocalTransfer-v1.2.0-beta1-macos.dmg"
+            hdiutil create -volname "Local Transfer" -srcfolder LocalSend.app -ov -format UDZO "$GITHUB_WORKSPACE/build_output/macos/LocalTransfer-${TAG}-macos.dmg"
           fi
 
       - name: Upload macOS to Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload v1.2.0-beta1 "$GITHUB_WORKSPACE/build_output/macos/LocalTransfer-v1.2.0-beta1-macos.zip" "$GITHUB_WORKSPACE/build_output/macos/LocalTransfer-v1.2.0-beta1-macos.dmg" --clobber --repo smartworldarafath/Local-Transfer
+          TAG="${{ github.event.inputs.release_tag || 'v1.2.5-beta2' }}"
+          gh release upload "$TAG" "$GITHUB_WORKSPACE/build_output/macos/LocalTransfer-${TAG}-macos.zip" "$GITHUB_WORKSPACE/build_output/macos/LocalTransfer-${TAG}-macos.dmg" --clobber --repo smartworldarafath/Local-Transfer
 
-  # 4. iOS & iPadOS IPA (Sideload payload)
+  # 5. iOS & iPadOS IPA (Sideload payload)
   build_ios:
     if: "${{ github.event.inputs.platforms == 'all' || github.event.inputs.platforms == 'apple' || github.event.inputs.platforms == 'ios' || github.event.inputs.platforms == '' }}"
     runs-on: macos-14
@@ -249,14 +298,16 @@ jobs:
 
       - name: Package Payload IPA
         run: |
+          TAG="${{ github.event.inputs.release_tag || 'v1.2.5-beta2' }}"
           mkdir -p build_output/ios/Payload
           cp -r app/build/ios/iphoneos/Runner.app build_output/ios/Payload/
           cd build_output/ios
-          zip -r -y LocalTransfer-v1.2.0-beta1-ios-universal.ipa Payload
+          zip -r -y "LocalTransfer-${TAG}-ios-universal.ipa" Payload
           cd ../../
 
       - name: Upload iOS/iPadOS IPA to Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload v1.2.0-beta1 "build_output/ios/LocalTransfer-v1.2.0-beta1-ios-universal.ipa" --clobber --repo smartworldarafath/Local-Transfer
+          TAG="${{ github.event.inputs.release_tag || 'v1.2.5-beta2' }}"
+          gh release upload "$TAG" "build_output/ios/LocalTransfer-${TAG}-ios-universal.ipa" --clobber --repo smartworldarafath/Local-Transfer
