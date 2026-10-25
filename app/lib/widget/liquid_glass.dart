@@ -48,7 +48,7 @@ class LiquidGlassMaterial extends StatelessWidget {
     final baseTint = tintColor ??
         (isDark
             ? Colors.white.withOpacity(0.08 * (intensity / 0.75))
-            : Colors.white.withOpacity(0.55 * (intensity / 0.75)));
+            : Colors.white.withOpacity(0.90 * (intensity / 0.75)));
 
     // Subtle vertical light gradient if requested, avoiding harsh horizontal color splits
     final Gradient? gradient = useGradient
@@ -86,13 +86,18 @@ class LiquidGlassMaterial extends StatelessWidget {
             boxShadow: shadow != null
                 ? [shadow!]
                 : [
-                    BoxShadow(
-                      color: isDark
-                          ? Colors.black.withOpacity(0.35)
-                          : Colors.black.withOpacity(0.08),
-                      blurRadius: 18,
-                      offset: const Offset(0, 6),
-                    ),
+                    if (isDark)
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.35),
+                        blurRadius: 18,
+                        offset: const Offset(0, 6),
+                      )
+                    else
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.03),
+                        blurRadius: 12,
+                        offset: const Offset(0, 2),
+                      ),
                   ],
           ),
           child: child,
@@ -264,7 +269,7 @@ class LiquidGlassDock extends StatelessWidget {
           blurSigma: 20,
           tintColor: isDark
               ? const Color(0xFF161922).withOpacity(0.92)
-              : Colors.white.withOpacity(0.85),
+              : Colors.white.withOpacity(0.92),
           intensity: 0.95,
           child: Container(
             height: 70,

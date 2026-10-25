@@ -42,9 +42,9 @@ class AppThemePage extends StatelessWidget {
           LiquidGlassMaterial(
             borderRadius: BorderRadius.circular(24),
             blurSigma: 12,
-            tintColor: isDark ? const Color(0x331E222B) : Colors.white.withOpacity(0.7),
+            tintColor: isDark ? const Color(0x331E222B) : Colors.white.withOpacity(0.92),
             border: Border.all(
-              color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06),
+              color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.04),
               width: 1,
             ),
             child: Padding(

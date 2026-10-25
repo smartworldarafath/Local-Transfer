@@ -57,13 +57,45 @@ import 'package:window_manager/window_manager.dart';
 
 final _logger = Logger('Init');
 
+/// Enables the highest available display refresh rate (e.g. 144Hz on Xiaomi Pad 7/8 Pro, 120Hz, etc.)
+Future<void> enableOptimalHighRefreshRate() async {
+  try {
+    final supported = await FlutterDisplayMode.supported;
+    if (supported.isEmpty) {
+      await FlutterDisplayMode.setHighRefreshRate();
+      return;
+    }
+
+    final active = await FlutterDisplayMode.active;
+    final sorted = List<DisplayMode>.from(supported)
+      ..sort((a, b) {
+        final cmp = b.refreshRate.compareTo(a.refreshRate);
+        if (cmp != 0) return cmp;
+        final resA = (a.width == active.width && a.height == active.height) ? 1 : 0;
+        final resB = (b.width == active.width && b.height == active.height) ? 1 : 0;
+        if (resA != resB) return resB.compareTo(resA);
+        return (b.width * b.height).compareTo(a.width * a.height);
+      });
+
+    if (sorted.isNotEmpty && sorted.first.refreshRate > 60.0) {
+      await FlutterDisplayMode.setPreferredMode(sorted.first);
+    } else {
+      await FlutterDisplayMode.setHighRefreshRate();
+    }
+  } catch (_) {
+    try {
+      await FlutterDisplayMode.setHighRefreshRate();
+    } catch (_) {}
+  }
+}
+
 /// Will be called before the MaterialApp started
 Future<RefenaContainer> preInit(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
 
   if (checkPlatform([TargetPlatform.android])) {
     try {
-      await FlutterDisplayMode.setHighRefreshRate();
+      await enableOptimalHighRefreshRate();
     } catch (_) {}
   }
 
@@ -209,7 +241,7 @@ Future<void> postInit(BuildContext context, Ref ref, bool appStart) async {
     // https://github.com/localsend/localsend/issues/3452
     if (!ref.read(tvProvider)) {
       try {
-        await FlutterDisplayMode.setHighRefreshRate();
+        await enableOptimalHighRefreshRate();
       } catch (e) {
         _logger.warning('Setting high refresh rate failed', e);
       }

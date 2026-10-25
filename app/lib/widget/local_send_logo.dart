@@ -8,14 +8,12 @@ class LocalSendLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logo = ColorFiltered(
-      colorFilter: ColorFilter.mode(
-        Theme.of(context).colorScheme.primary,
-        BlendMode.srcATop,
-      ),
+    final logo = ClipRRect(
+      borderRadius: BorderRadius.circular(24),
       child: Assets.img.logo512.image(
-        width: 200,
-        height: 200,
+        width: 120,
+        height: 120,
+        fit: BoxFit.contain,
       ),
     );
 
@@ -23,9 +21,10 @@ class LocalSendLogo extends StatelessWidget {
       return Column(
         children: [
           logo,
+          const SizedBox(height: 14),
           const Text(
             'Local Transfer',
-            style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
         ],

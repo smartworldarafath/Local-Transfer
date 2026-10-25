@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.database.Cursor
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.os.Environment
 import android.provider.DocumentsContract
 import android.provider.Settings
@@ -35,6 +36,44 @@ private const val API_LEVEL_ANDROID_17 = 37
 
 class MainActivity : FlutterActivity() {
     private var pendingResult: MethodChannel.Result? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableMaxDisplayRefreshRate()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        enableMaxDisplayRefreshRate()
+    }
+
+    private fun enableMaxDisplayRefreshRate() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            try {
+                val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    display
+                } else {
+                    @Suppress("DEPRECATION")
+                    windowManager.defaultDisplay
+                }
+                val modes = display?.supportedModes
+                if (!modes.isNullOrEmpty()) {
+                    val maxMode = modes.maxByOrNull { it.refreshRate }
+                    if (maxMode != null) {
+                        val layoutParams = window.attributes
+                        layoutParams.preferredDisplayModeId = maxMode.modeId
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                            layoutParams.preferredMinDisplayRefreshRate = maxMode.refreshRate
+                            layoutParams.preferredMaxDisplayRefreshRate = maxMode.refreshRate
+                        }
+                        window.attributes = layoutParams
+                    }
+                }
+            } catch (e: Exception) {
+                // Ignore if display mode cannot be adjusted
+            }
+        }
+    }
     private var pendingPermissionResult: MethodChannel.Result? = null
 
     /// share_handler drops share intents arriving via onNewIntent while the Dart side

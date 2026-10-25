@@ -30,6 +30,7 @@ class AppUpdatesPage extends StatelessWidget {
           child: LiquidGlassButton(
             borderRadius: BorderRadius.circular(20),
             padding: EdgeInsets.zero,
+            tintColor: isDark ? null : Colors.white.withOpacity(0.92),
             onTap: () => context.pop(),
             child: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: textColor),
           ),
@@ -51,9 +52,9 @@ class AppUpdatesPage extends StatelessWidget {
           LiquidGlassMaterial(
             borderRadius: BorderRadius.circular(24),
             blurSigma: 12,
-            tintColor: isDark ? const Color(0x331E222B) : Colors.white.withOpacity(0.7),
+            tintColor: isDark ? const Color(0x331E222B) : Colors.white.withOpacity(0.92),
             border: Border.all(
-              color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06),
+              color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.04),
               width: 1,
             ),
             child: Padding(
@@ -109,6 +110,7 @@ class AppUpdatesPage extends StatelessWidget {
                         LiquidGlassButton(
                           borderRadius: BorderRadius.circular(20),
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          tintColor: isDark ? null : Colors.white.withOpacity(0.92),
                           onTap: () => notifier.downloadAndInstall(context),
                           child: const Text(
                             'Update',
@@ -119,6 +121,7 @@ class AppUpdatesPage extends StatelessWidget {
                         LiquidGlassButton(
                           borderRadius: BorderRadius.circular(20),
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          tintColor: isDark ? null : Colors.white.withOpacity(0.92),
                           onTap: () => notifier.checkForUpdates(),
                           child: updateState.status == UpdateStatus.checking
                               ? const SizedBox(
@@ -182,9 +185,9 @@ class AppUpdatesPage extends StatelessWidget {
           LiquidGlassMaterial(
             borderRadius: BorderRadius.circular(24),
             blurSigma: 12,
-            tintColor: isDark ? const Color(0x331E222B) : Colors.white.withOpacity(0.7),
+            tintColor: isDark ? const Color(0x331E222B) : Colors.white.withOpacity(0.92),
             border: Border.all(
-              color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06),
+              color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.04),
               width: 1,
             ),
             child: Padding(
