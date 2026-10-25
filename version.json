@@ -1,0 +1,17 @@
+{
+  "version": "1.2.6",
+  "tag_name": "v1.2.6-beta2.1",
+  "name": "v1.2.6 (Beta 2.1)",
+  "html_url": "https://github.com/smartworldarafath/Local-Transfer/releases/tag/v1.2.6-beta2.1",
+  "body": "Local Transfer v1.2.6 (Beta 2.1) maintenance release with Windows branding and multiplatform update fixes.",
+  "download_urls": {
+    "android": "https://github.com/smartworldarafath/Local-Transfer/releases/download/v1.2.6-beta2.1/LocalTransfer-v1.2.6-beta2.1.apk",
+    "windows_exe": "https://github.com/smartworldarafath/Local-Transfer/releases/download/v1.2.6-beta2.1/LocalTransfer-v1.2.6-beta2.1-windows-x64.exe",
+    "windows_zip": "https://github.com/smartworldarafath/Local-Transfer/releases/download/v1.2.6-beta2.1/LocalTransfer-v1.2.6-beta2.1-windows-x64.zip",
+    "macos_dmg": "https://github.com/smartworldarafath/Local-Transfer/releases/download/v1.2.6-beta2.1/LocalTransfer-v1.2.6-beta2.1-macos.dmg",
+    "macos_zip": "https://github.com/smartworldarafath/Local-Transfer/releases/download/v1.2.6-beta2.1/LocalTransfer-v1.2.6-beta2.1-macos.zip",
+    "linux_appimage": "https://github.com/smartworldarafath/Local-Transfer/releases/download/v1.2.6-beta2.1/LocalTransfer-v1.2.6-beta2.1-linux-x86_64.AppImage",
+    "linux_tar": "https://github.com/smartworldarafath/Local-Transfer/releases/download/v1.2.6-beta2.1/LocalTransfer-v1.2.6-beta2.1-linux-x86_64.tar.gz",
+    "ios_ipa": "https://github.com/smartworldarafath/Local-Transfer/releases/download/v1.2.6-beta2.1/LocalTransfer-v1.2.6-beta2.1-ios-universal.ipa"
+  }
+}

@@ -40,7 +40,7 @@ class TranslationsId extends Translations with BaseTranslations<AppLocale, Trans
 
   // Translations
   @override
-  String get appName => 'LocalSend';
+  String get appName => 'Local Transfer';
   @override
   late final _Translations$general$id general = _Translations$general$id._(_root);
   @override

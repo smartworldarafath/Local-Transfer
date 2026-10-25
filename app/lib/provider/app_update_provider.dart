@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:localsend_app/provider/version_provider.dart';
 import 'package:localsend_app/util/native/open_file.dart';
@@ -8,6 +9,7 @@ import 'package:localsend_app/util/native/platform_check.dart';
 import 'package:localsend_isolates/model/file_type.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:refena_flutter/refena_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ReleaseAssetInfo {
   final String name;
@@ -28,6 +30,14 @@ class AppReleaseInfo {
   final String htmlUrl;
   final String? apkDownloadUrl;
   final int? apkSize;
+  final String? windowsDownloadUrl;
+  final int? windowsSize;
+  final String? macosDownloadUrl;
+  final int? macosSize;
+  final String? linuxDownloadUrl;
+  final int? linuxSize;
+  final String? iosDownloadUrl;
+  final int? iosSize;
 
   AppReleaseInfo({
     required this.tagName,
@@ -36,31 +46,142 @@ class AppReleaseInfo {
     required this.htmlUrl,
     this.apkDownloadUrl,
     this.apkSize,
+    this.windowsDownloadUrl,
+    this.windowsSize,
+    this.macosDownloadUrl,
+    this.macosSize,
+    this.linuxDownloadUrl,
+    this.linuxSize,
+    this.iosDownloadUrl,
+    this.iosSize,
   });
+
+  String? get platformDownloadUrl {
+    if (checkPlatform([TargetPlatform.android])) {
+      return apkDownloadUrl;
+    } else if (checkPlatform([TargetPlatform.windows])) {
+      return windowsDownloadUrl;
+    } else if (checkPlatform([TargetPlatform.macOS])) {
+      return macosDownloadUrl;
+    } else if (checkPlatform([TargetPlatform.linux])) {
+      return linuxDownloadUrl;
+    } else if (checkPlatform([TargetPlatform.iOS])) {
+      return iosDownloadUrl;
+    }
+    return apkDownloadUrl ?? windowsDownloadUrl ?? macosDownloadUrl ?? linuxDownloadUrl;
+  }
 
   factory AppReleaseInfo.fromJson(Map<String, dynamic> json) {
     String? apkUrl;
-    int? size;
+    int? apkSize;
+    String? windowsUrl;
+    int? windowsSize;
+    String? macosUrl;
+    int? macosSize;
+    String? linuxUrl;
+    int? linuxSize;
+    String? iosUrl;
+    int? iosSize;
+
     final assets = json['assets'] as List<dynamic>?;
     if (assets != null) {
       for (final a in assets) {
         final name = (a['name'] as String? ?? '').toLowerCase();
+        final url = a['browser_download_url'] as String?;
+        final size = a['size'] as int?;
+
         if (name.endsWith('.apk')) {
-          apkUrl = a['browser_download_url'] as String?;
-          size = a['size'] as int?;
-          break;
+          apkUrl ??= url;
+          apkSize ??= size;
+        } else if (name.endsWith('.exe')) {
+          windowsUrl = url;
+          windowsSize = size;
+        } else if (name.endsWith('.zip') && (name.contains('windows') || name.contains('win'))) {
+          windowsUrl ??= url;
+          windowsSize ??= size;
+        } else if (name.endsWith('.dmg')) {
+          macosUrl = url;
+          macosSize = size;
+        } else if (name.endsWith('.zip') && (name.contains('macos') || name.contains('mac') || name.contains('darwin'))) {
+          macosUrl ??= url;
+          macosSize ??= size;
+        } else if (name.endsWith('.appimage')) {
+          linuxUrl = url;
+          linuxSize = size;
+        } else if (name.endsWith('.tar.gz') && (name.contains('linux') || name.contains('x86_64'))) {
+          linuxUrl ??= url;
+          linuxSize ??= size;
+        } else if (name.endsWith('.ipa')) {
+          iosUrl = url;
+          iosSize = size;
         }
       }
     }
 
+    final tagName = json['tag_name'] as String? ?? '';
     return AppReleaseInfo(
-      tagName: json['tag_name'] as String? ?? '',
+      tagName: tagName,
       name: json['name'] as String? ?? json['tag_name'] as String? ?? '',
       body: json['body'] as String? ?? '',
       htmlUrl: json['html_url'] as String? ?? '',
-      apkDownloadUrl: apkUrl,
-      apkSize: size,
+      apkDownloadUrl: apkUrl ?? 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tagName/LocalTransfer-$tagName.apk',
+      apkSize: apkSize,
+      windowsDownloadUrl: windowsUrl ?? 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tagName/LocalTransfer-$tagName-windows-x64.exe',
+      windowsSize: windowsSize,
+      macosDownloadUrl: macosUrl ?? 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tagName/LocalTransfer-$tagName-macos.dmg',
+      macosSize: macosSize,
+      linuxDownloadUrl: linuxUrl ?? 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tagName/LocalTransfer-$tagName-linux-x86_64.AppImage',
+      linuxSize: linuxSize,
+      iosDownloadUrl: iosUrl ?? 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tagName/LocalTransfer-$tagName-ios-universal.ipa',
+      iosSize: iosSize,
     );
+  }
+
+  factory AppReleaseInfo.fromVersionJson(Map<String, dynamic> json) {
+    final downloads = json['download_urls'] as Map<String, dynamic>? ?? {};
+    final tag = json['tag_name'] as String? ?? 'v${json['version']}';
+    return AppReleaseInfo(
+      tagName: tag,
+      name: json['name'] as String? ?? 'v${json['version']}',
+      body: json['body'] as String? ?? '',
+      htmlUrl: json['html_url'] as String? ?? 'https://github.com/smartworldarafath/Local-Transfer/releases',
+      apkDownloadUrl: downloads['android'] as String? ?? 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tag/LocalTransfer-$tag.apk',
+      windowsDownloadUrl: (downloads['windows_exe'] ?? downloads['windows_zip']) as String? ?? 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tag/LocalTransfer-$tag-windows-x64.exe',
+      macosDownloadUrl: (downloads['macos_dmg'] ?? downloads['macos_zip']) as String? ?? 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tag/LocalTransfer-$tag-macos.dmg',
+      linuxDownloadUrl: (downloads['linux_appimage'] ?? downloads['linux_tar']) as String? ?? 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tag/LocalTransfer-$tag-linux-x86_64.AppImage',
+      iosDownloadUrl: downloads['ios_ipa'] as String? ?? 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tag/LocalTransfer-$tag-ios-universal.ipa',
+    );
+  }
+
+  static AppReleaseInfo? fromAtomFeed(String xml) {
+    try {
+      final entryRegex = RegExp(r'<entry>([\s\S]*?)<\/entry>');
+      final match = entryRegex.firstMatch(xml);
+      if (match == null) return null;
+      final entry = match.group(1)!;
+
+      final tagMatch = RegExp(r'<id>tag:github\.com,2008:Repository\/\d+\/(.+?)<\/id>').firstMatch(entry);
+      final titleMatch = RegExp(r'<title>(.*?)<\/title>').firstMatch(entry);
+      final linkMatch = RegExp(r'<link[^>]*href="([^"]+)"').firstMatch(entry);
+
+      final tagName = tagMatch?.group(1) ?? '';
+      final title = titleMatch?.group(1) ?? tagName;
+      final htmlUrl = linkMatch?.group(1) ?? 'https://github.com/smartworldarafath/Local-Transfer/releases/tag/$tagName';
+
+      return AppReleaseInfo(
+        tagName: tagName,
+        name: title,
+        body: '',
+        htmlUrl: htmlUrl,
+        apkDownloadUrl: 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tagName/LocalTransfer-$tagName.apk',
+        windowsDownloadUrl: 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tagName/LocalTransfer-$tagName-windows-x64.exe',
+        macosDownloadUrl: 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tagName/LocalTransfer-$tagName-macos.dmg',
+        linuxDownloadUrl: 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tagName/LocalTransfer-$tagName-linux-x86_64.AppImage',
+        iosDownloadUrl: 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tagName/LocalTransfer-$tagName-ios-universal.ipa',
+      );
+    } catch (_) {
+      return null;
+    }
   }
 }
 
@@ -132,34 +253,70 @@ class AppUpdateNotifier extends Notifier<AppUpdateState> {
     state = state.copyWith(status: UpdateStatus.checking, errorMessage: null);
 
     try {
-      final client = HttpClient();
-      client.userAgent = 'LocalTransfer-App';
-      final request = await client.getUrl(Uri.parse(repoReleasesUrl));
-      request.headers.set('Accept', 'application/vnd.github.v3+json');
-      final response = await request.close();
+      AppReleaseInfo? latest;
 
-      if (response.statusCode != 200) {
-        throw Exception('GitHub API returned status code ${response.statusCode}');
+      // 1. Try GitHub Releases REST API
+      try {
+        final client = HttpClient();
+        client.userAgent = 'LocalTransfer-App';
+        final request = await client.getUrl(Uri.parse(repoReleasesUrl));
+        request.headers.set('Accept', 'application/vnd.github.v3+json');
+        final response = await request.close();
+
+        if (response.statusCode == 200) {
+          final responseBody = await response.transform(utf8.decoder).join();
+          final List<dynamic> releasesJson = jsonDecode(responseBody) as List<dynamic>;
+          if (releasesJson.isNotEmpty) {
+            latest = AppReleaseInfo.fromJson(releasesJson.first as Map<String, dynamic>);
+          }
+        }
+      } catch (_) {
+        // Proceed to zero-rate-limit fallback
       }
 
-      final responseBody = await response.transform(utf8.decoder).join();
-      final List<dynamic> releasesJson = jsonDecode(responseBody) as List<dynamic>;
-
-      if (releasesJson.isEmpty) {
-        state = state.copyWith(status: UpdateStatus.upToDate);
-        return;
+      // 2. If API was rate limited (403/429) or failed, try version.json (Raw / CDN)
+      if (latest == null) {
+        for (final rawUrl in [
+          'https://raw.githubusercontent.com/smartworldarafath/Local-Transfer/main/version.json',
+          'https://cdn.jsdelivr.net/gh/smartworldarafath/Local-Transfer@main/version.json',
+        ]) {
+          try {
+            final client = HttpClient();
+            client.userAgent = 'LocalTransfer-App';
+            final request = await client.getUrl(Uri.parse(rawUrl));
+            final response = await request.close();
+            if (response.statusCode == 200) {
+              final body = await response.transform(utf8.decoder).join();
+              final Map<String, dynamic> vJson = jsonDecode(body) as Map<String, dynamic>;
+              latest = AppReleaseInfo.fromVersionJson(vJson);
+              break;
+            }
+          } catch (_) {}
+        }
       }
 
-      final currentVersion = ref.read(versionProvider).data?.version ?? '1.2.5';
-      final latest = AppReleaseInfo.fromJson(releasesJson.first as Map<String, dynamic>);
+      // 3. Fallback to GitHub Releases Atom feed (always available, no token/rate limit)
+      if (latest == null) {
+        try {
+          final client = HttpClient();
+          client.userAgent = 'LocalTransfer-App';
+          final request = await client.getUrl(Uri.parse('https://github.com/smartworldarafath/Local-Transfer/releases.atom'));
+          final response = await request.close();
+          if (response.statusCode == 200) {
+            final body = await response.transform(utf8.decoder).join();
+            latest = AppReleaseInfo.fromAtomFeed(body);
+          }
+        } catch (_) {}
+      }
 
-      // Check if latest version tag is newer than current version
-      final latestTagClean = latest.tagName.replaceAll(RegExp(r'[^0-9.]'), '');
-      final currentClean = currentVersion.replaceAll(RegExp(r'[^0-9.]'), '');
+      if (latest == null) {
+        throw Exception('Unable to reach update servers. Please check your internet connection.');
+      }
 
-      final isNewer = _isVersionGreater(latestTagClean, currentClean);
+      final currentVersionCombined = ref.read(versionProvider).data?.combinedString ?? 'v1.2.6 (Beta 2.1)';
+      final isNewer = _isVersionGreater(latest.tagName, currentVersionCombined);
 
-      if (isNewer && latest.apkDownloadUrl != null) {
+      if (isNewer) {
         state = state.copyWith(
           status: UpdateStatus.available,
           latestRelease: latest,
@@ -182,24 +339,73 @@ class AppUpdateNotifier extends Notifier<AppUpdateState> {
     }
   }
 
-  bool _isVersionGreater(String v1, String v2) {
+  bool _isVersionGreater(String remote, String current) {
     try {
-      final parts1 = v1.split('.').map(int.parse).toList();
-      final parts2 = v2.split('.').map(int.parse).toList();
-      for (int i = 0; i < parts1.length && i < parts2.length; i++) {
-        if (parts1[i] > parts2[i]) return true;
-        if (parts1[i] < parts2[i]) return false;
+      final semverRegex = RegExp(r'(\d+)\.(\d+)\.(\d+)');
+      final matchRemote = semverRegex.firstMatch(remote);
+      final matchCurrent = semverRegex.firstMatch(current);
+
+      if (matchRemote != null && matchCurrent != null) {
+        final rMajor = int.parse(matchRemote.group(1)!);
+        final rMinor = int.parse(matchRemote.group(2)!);
+        final rPatch = int.parse(matchRemote.group(3)!);
+
+        final cMajor = int.parse(matchCurrent.group(1)!);
+        final cMinor = int.parse(matchCurrent.group(2)!);
+        final cPatch = int.parse(matchCurrent.group(3)!);
+
+        if (rMajor != cMajor) return rMajor > cMajor;
+        if (rMinor != cMinor) return rMinor > cMinor;
+        if (rPatch != cPatch) return rPatch > cPatch;
       }
-      return parts1.length > parts2.length;
+
+      final betaRegex = RegExp(r'beta[^\d]*(\d+(?:\.\d+)?)', caseSensitive: false);
+      final remoteBeta = betaRegex.firstMatch(remote)?.group(1);
+      final currentBeta = betaRegex.firstMatch(current)?.group(1);
+
+      if (remoteBeta != null && currentBeta != null) {
+        final rB = double.tryParse(remoteBeta) ?? 0.0;
+        final cB = double.tryParse(currentBeta) ?? 0.0;
+        if (rB != cB) return rB > cB;
+      } else if (remoteBeta == null && currentBeta != null) {
+        return true;
+      } else if (remoteBeta != null && currentBeta == null) {
+        return false;
+      }
+
+      return remote.trim() != current.trim();
     } catch (_) {
-      return v1 != v2;
+      return remote.trim() != current.trim();
     }
   }
 
   Future<void> downloadAndInstall(BuildContext context) async {
     final release = state.latestRelease;
-    final apkUrl = release?.apkDownloadUrl;
-    if (apkUrl == null) return;
+    if (release == null) return;
+
+    // Non-Android platforms: direct open or download
+    if (checkPlatform([TargetPlatform.windows])) {
+      final targetUrl = release.windowsDownloadUrl ?? release.htmlUrl;
+      if (targetUrl.toLowerCase().endsWith('.exe')) {
+        await _downloadAndRunWindowsExe(context, targetUrl, release.tagName);
+        return;
+      }
+      await launchUrl(Uri.parse(targetUrl), mode: LaunchMode.externalApplication);
+      return;
+    }
+
+    if (checkPlatform([TargetPlatform.macOS, TargetPlatform.linux, TargetPlatform.iOS])) {
+      final targetUrl = release.platformDownloadUrl ?? release.htmlUrl;
+      await launchUrl(Uri.parse(targetUrl), mode: LaunchMode.externalApplication);
+      return;
+    }
+
+    // Android APK download & install flow
+    final apkUrl = release.apkDownloadUrl;
+    if (apkUrl == null) {
+      await launchUrl(Uri.parse(release.htmlUrl), mode: LaunchMode.externalApplication);
+      return;
+    }
 
     state = state.copyWith(
       status: UpdateStatus.downloading,
@@ -209,7 +415,7 @@ class AppUpdateNotifier extends Notifier<AppUpdateState> {
 
     try {
       final tempDir = await getTemporaryDirectory();
-      final savePath = '${tempDir.path}/LocalTransfer_${release!.tagName}.apk';
+      final savePath = '${tempDir.path}/LocalTransfer_${release.tagName}.apk';
       final file = File(savePath);
 
       final client = HttpClient();
@@ -240,8 +446,7 @@ class AppUpdateNotifier extends Notifier<AppUpdateState> {
         downloadedFilePath: savePath,
       );
 
-      // Trigger installation immediately
-      if (checkPlatform([TargetPlatform.android])) {
+      if (context.mounted && checkPlatform([TargetPlatform.android])) {
         // ignore: use_build_context_synchronously
         await openFile(context, FileType.apk, savePath);
       }
@@ -250,6 +455,58 @@ class AppUpdateNotifier extends Notifier<AppUpdateState> {
         status: UpdateStatus.error,
         errorMessage: 'Failed to download update: $e',
       );
+    }
+  }
+
+  Future<void> _downloadAndRunWindowsExe(BuildContext context, String exeUrl, String tagName) async {
+    state = state.copyWith(
+      status: UpdateStatus.downloading,
+      downloadProgress: 0.01,
+      errorMessage: null,
+    );
+
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final savePath = '${tempDir.path}\\LocalTransfer_$tagName.exe';
+      final file = File(savePath);
+
+      final client = HttpClient();
+      final request = await client.getUrl(Uri.parse(exeUrl));
+      final response = await request.close();
+
+      if (response.statusCode != 200) {
+        throw Exception('Download failed with status: ${response.statusCode}');
+      }
+
+      final contentLength = response.contentLength;
+      int downloaded = 0;
+      final sink = file.openWrite();
+
+      await for (final chunk in response) {
+        downloaded += chunk.length;
+        sink.add(chunk);
+        if (contentLength > 0) {
+          state = state.copyWith(downloadProgress: downloaded / contentLength);
+        }
+      }
+      await sink.flush();
+      await sink.close();
+
+      state = state.copyWith(
+        status: UpdateStatus.readyToInstall,
+        downloadProgress: 1.0,
+        downloadedFilePath: savePath,
+      );
+
+      // Launch Windows installer
+      await Process.start(savePath, [], runInShell: true);
+    } catch (e) {
+      state = state.copyWith(
+        status: UpdateStatus.error,
+        errorMessage: 'Failed to download installer: $e',
+      );
+      // Fallback to browser
+      await launchUrl(Uri.parse(exeUrl), mode: LaunchMode.externalApplication);
     }
   }
 

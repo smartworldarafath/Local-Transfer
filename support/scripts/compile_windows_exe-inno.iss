@@ -11,10 +11,10 @@
   #define ResultDir "D:\inno-result"
 #endif
 
-#define MyAppName "LocalSend"
-#define MyAppVersion "1.2.5"
+#define MyAppName "Local Transfer"
+#define MyAppVersion "1.2.6"
 #define MyAppPublisher "smartworldarafath"
-#define MyAppURL "https://localsend.org"
+#define MyAppURL "https://github.com/smartworldarafath/Local-Transfer"
 #define MyAppExeName "localsend_app.exe"
 #define MyAppMsixHelper "localsend_msix_helper.msix"
 

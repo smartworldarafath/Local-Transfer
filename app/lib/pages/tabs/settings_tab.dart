@@ -352,7 +352,7 @@ class SettingsTab extends StatelessWidget {
               children: [
                 _SettingsPillButtonRow(
                   label: 'Version',
-                  buttonLabel: 'v1.2.5 (Beta 2)',
+                  buttonLabel: 'v1.2.6 (Beta 2.1)',
                   onTap: () => context.push(() => const AboutPage()),
                 ),
                 _SettingsPillButtonRow(

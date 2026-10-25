@@ -24,7 +24,7 @@
   <Identity Name="LocalSend.App" Version="1.18.2.0"
             Publisher="CN=smartworldarafath, O=smartworldarafath, L=Berlin, C=DE" ProcessorArchitecture="x64" />
   <Properties>
-    <DisplayName>LocalSend MSIX Helper</DisplayName>
+    <DisplayName>Local Transfer MSIX Helper</DisplayName>
     <PublisherDisplayName>smartworldarafath</PublisherDisplayName>
     <Logo>Images\StoreLogo.png</Logo>
     <Description>An open source cross-platform alternative to AirDrop</Description>
@@ -42,9 +42,9 @@
   <Applications>
     <Application Id="localsendapp" Executable="localsend_app.exe" EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements AppListEntry="none" BackgroundColor="transparent"
-        DisplayName="LocalSend" Square150x150Logo="Images\Square150x150Logo.png"
+        DisplayName="Local Transfer" Square150x150Logo="Images\Square150x150Logo.png"
         Square44x44Logo="Images\Square44x44Logo.png" Description="An open source cross-platform alternative to AirDrop">
-        <uap:DefaultTile ShortName="LocalSend" Square310x310Logo="Images\LargeTile.png"
+        <uap:DefaultTile ShortName="Local Transfer" Square310x310Logo="Images\LargeTile.png"
           Square71x71Logo="Images\SmallTile.png" Wide310x150Logo="Images\Wide310x150Logo.png">
           <uap:ShowNameOnTiles>
             <uap:ShowOn Tile="square150x150Logo"/>
@@ -57,10 +57,10 @@
       </uap:VisualElements>
       <Extensions>
         <desktop:Extension Category="windows.startupTask" Executable="localsend_app.exe" EntryPoint="Windows.FullTrustApplication" uap10:Parameters="autostart">
-          <desktop:StartupTask TaskId="localsend" Enabled="false" DisplayName="LocalSend"/>
+          <desktop:StartupTask TaskId="localsend" Enabled="false" DisplayName="Local Transfer"/>
         </desktop:Extension>
         <uap:Extension Category="windows.shareTarget">
-          <uap:ShareTarget Description="Send to Localsend">
+          <uap:ShareTarget Description="Send to Local Transfer">
             <uap:SupportedFileTypes>
               <uap:SupportsAnyFileType />
             </uap:SupportedFileTypes>

@@ -40,7 +40,7 @@ class TranslationsHi extends Translations with BaseTranslations<AppLocale, Trans
 
   // Translations
   @override
-  String get appName => 'स्थानीय भेजें (फाइल भेजो)';
+  String get appName => 'Local Transfer';
   @override
   late final _Translations$general$hi general = _Translations$general$hi._(_root);
   @override

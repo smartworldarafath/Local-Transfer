@@ -40,7 +40,7 @@ class TranslationsRu extends Translations with BaseTranslations<AppLocale, Trans
 
   // Translations
   @override
-  String get appName => 'LocalSend';
+  String get appName => 'Local Transfer';
   @override
   late final _Translations$general$ru general = _Translations$general$ru._(_root);
   @override

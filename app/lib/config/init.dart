@@ -164,6 +164,7 @@ Future<RefenaContainer> preInit(List<String> args) async {
       await windowManager.setAlwaysOnTop(persistenceService.getAlwaysOnTop());
     }
     await WindowDimensionsController(persistenceService).initDimensionsConfiguration();
+    await windowManager.setTitle('Local Transfer');
     if (args.contains(startHiddenFlag)) {
       // keep this app hidden
       startHidden = true;
