@@ -62,10 +62,6 @@ class MainActivity : FlutterActivity() {
                     if (maxMode != null) {
                         val layoutParams = window.attributes
                         layoutParams.preferredDisplayModeId = maxMode.modeId
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                            layoutParams.preferredMinDisplayRefreshRate = maxMode.refreshRate
-                            layoutParams.preferredMaxDisplayRefreshRate = maxMode.refreshRate
-                        }
                         window.attributes = layoutParams
                     }
                 }
