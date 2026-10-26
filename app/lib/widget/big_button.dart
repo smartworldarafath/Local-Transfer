@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:localsend_app/provider/ui_theme_provider.dart';
+import 'package:localsend_app/widget/liquid_glass.dart';
+import 'package:refena_flutter/refena_flutter.dart';
 
 /// A squircle button card for the SendTab Selection grid, matching 1791382743298.jpg.
 /// Features a dark rounded squircle container (radius ~24), icon, label, and subtitle.
@@ -51,19 +54,136 @@ class _BigButtonState extends State<BigButton> with SingleTickerProviderStateMix
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final isAiUi = context.ref.watch(uiThemeProvider) == UiTheme.aiUi;
 
-    final bgColor = widget.filled
-        ? theme.colorScheme.primary
-        : (isDark ? const Color(0xFF1E2430) : const Color(0xFFF0F3F8));
-    final textColor = widget.filled
-        ? theme.colorScheme.onPrimary
-        : (isDark ? Colors.white : Colors.black87);
-    final subtitleColor = widget.filled
-        ? theme.colorScheme.onPrimary.withOpacity(0.8)
-        : (isDark ? Colors.white60 : Colors.black54);
-    final iconColor = widget.filled
-        ? theme.colorScheme.onPrimary
-        : (isDark ? Colors.white.withOpacity(0.9) : Colors.black87);
+    final bgColor = widget.filled ? theme.colorScheme.primary : (isDark ? const Color(0xFF1E2430) : const Color(0xFFF0F3F8));
+    final textColor = widget.filled ? theme.colorScheme.onPrimary : (isDark ? Colors.white : Colors.black87);
+    final subtitleColor = widget.filled ? theme.colorScheme.onPrimary.withOpacity(0.8) : (isDark ? Colors.white60 : Colors.black54);
+    final iconColor = widget.filled ? theme.colorScheme.onPrimary : (isDark ? Colors.white.withOpacity(0.9) : Colors.black87);
+
+    if (isAiUi) {
+      if (widget.filled) {
+        // Deep cyan/teal capsule pill for Add to Selection modal (matching photo_4_2026-10-25_23-34-06.jpg)
+        return AnimatedBuilder(
+          animation: _scaleAnimation,
+          builder: (context, child) => Transform.scale(
+            scale: _scaleAnimation.value,
+            child: child,
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(28),
+              onTapDown: (_) => _controller.forward(),
+              onTapUp: (_) => _controller.reverse(),
+              onTapCancel: () => _controller.reverse(),
+              onTap: widget.onTap,
+              child: Container(
+                width: widget.width ?? 72,
+                height: 96,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0B7F9C),
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF0B7F9C).withOpacity(0.35),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(widget.icon, size: 28, color: Colors.white),
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+
+      // Frosted liquid glass squircle for Selection grid (matching photo_1_2026-10-25_23-34-06.jpg)
+      return AnimatedBuilder(
+        animation: _scaleAnimation,
+        builder: (context, child) => Transform.scale(
+          scale: _scaleAnimation.value,
+          child: child,
+        ),
+        child: LiquidGlassMaterial(
+          borderRadius: BorderRadius.circular(24),
+          blurSigma: 16,
+          tintColor: isDark ? const Color(0xFF1E2430).withOpacity(0.60) : Colors.white.withOpacity(0.55),
+          border: Border.all(
+            color: isDark ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.65),
+            width: 1.0,
+          ),
+          shadow: BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.25 : 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(24),
+              onTapDown: (_) => _controller.forward(),
+              onTapUp: (_) => _controller.reverse(),
+              onTapCancel: () => _controller.reverse(),
+              onTap: widget.onTap,
+              child: Container(
+                width: widget.width,
+                height: 112,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(widget.icon, size: 28, color: textColor),
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: textColor,
+                      ),
+                    ),
+                    if (widget.subtitle != null && widget.subtitle!.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        widget.subtitle!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w400,
+                          color: subtitleColor,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return AnimatedBuilder(
       animation: _scaleAnimation,

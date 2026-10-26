@@ -4,7 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:localsend_app/gen/strings.g.dart';
 import 'package:localsend_app/pages/debug/debug_page.dart';
 import 'package:localsend_app/util/i18n.dart';
+import 'package:localsend_app/provider/ui_theme_provider.dart';
+import 'package:localsend_app/widget/ai_ui_background.dart';
 import 'package:localsend_app/widget/local_send_logo.dart';
+import 'package:refena_flutter/refena_flutter.dart';
 import 'package:localsend_app/widget/responsive_list_view.dart';
 import 'package:routerino/routerino.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -23,158 +26,167 @@ class AboutPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).colorScheme.primary;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(t.aboutPage.title),
-      ),
-      body: ResponsiveListView(
-        padding: const EdgeInsets.symmetric(horizontal: 15),
-        children: [
-          const SizedBox(height: 20),
-          const LocalSendLogo(withText: true),
-          Text(
-            '© ${DateTime.now().year} Arafath',
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 10),
-          Center(
-            child: TextButton(
-              onPressed: () async {
-                await launchUrl(Uri.parse('https://github.com/smartworldarafath/Local-Transfer'), mode: LaunchMode.externalApplication);
-              },
-              child: const Text('github.com/smartworldarafath/Local-Transfer'),
+    final isAiUi = context.ref.watch(uiThemeProvider) == UiTheme.aiUi;
+    return AiUiContainer(
+      child: Scaffold(
+        backgroundColor: isAiUi ? Colors.transparent : null,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: Text(t.aboutPage.title),
+        ),
+        body: ResponsiveListView(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          children: [
+            const SizedBox(height: 20),
+            const LocalSendLogo(withText: true),
+            Text(
+              '© ${DateTime.now().year} Arafath',
+              textAlign: TextAlign.center,
             ),
-          ),
-          const SizedBox(height: 10),
-          Text(t.aboutPage.description.join('\n\n')),
-          const SizedBox(height: 20),
-          Text(t.aboutPage.author, style: const TextStyle(fontWeight: FontWeight.bold)),
-          Text.rich(
-            _buildContributor(
-              label: 'Arafath (@smartworldarafath)',
-              primaryColor: primaryColor,
+            const SizedBox(height: 10),
+            Center(
+              child: TextButton(
+                onPressed: () async {
+                  await launchUrl(Uri.parse('https://github.com/smartworldarafath/Local-Transfer'), mode: LaunchMode.externalApplication);
+                },
+                child: const Text('github.com/smartworldarafath/Local-Transfer'),
+              ),
             ),
-          ),
-          const SizedBox(height: 20),
-          Text(t.aboutPage.contributors, style: const TextStyle(fontWeight: FontWeight.bold)),
-          ..._contributors.map((contributor) {
-            return Text.rich(
+            const SizedBox(height: 10),
+            Text(t.aboutPage.description.join('\n\n')),
+            const SizedBox(height: 20),
+            Text(t.aboutPage.author, style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text.rich(
               _buildContributor(
-                label: contributor,
+                label: 'Arafath (@smartworldarafath)',
                 primaryColor: primaryColor,
               ),
-            );
-          }),
-          const SizedBox(height: 20),
-          Text(t.aboutPage.packagers, style: const TextStyle(fontWeight: FontWeight.bold)),
-          Table(
-            columnWidths: const {
-              0: IntrinsicColumnWidth(),
-              1: FlexColumnWidth(),
-            },
-            children: [
-              ..._packagers.entries.map(
-                (e) => TableRow(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(right: 10),
-                      child: Text(e.key),
-                    ),
-                    Text.rich(
-                      TextSpan(
-                        children: e.value.mapIndexed(
-                          (index, translator) {
-                            return _buildContributor(
-                              label: translator,
-                              primaryColor: primaryColor,
-                              newLine: index != 0,
-                            );
-                          },
-                        ).toList(),
-                      ),
-                    ),
-                  ],
+            ),
+            const SizedBox(height: 20),
+            Text(t.aboutPage.contributors, style: const TextStyle(fontWeight: FontWeight.bold)),
+            ..._contributors.map((contributor) {
+              return Text.rich(
+                _buildContributor(
+                  label: contributor,
+                  primaryColor: primaryColor,
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Text(t.aboutPage.translators, style: const TextStyle(fontWeight: FontWeight.bold)),
-          Table(
-            columnWidths: const {
-              0: IntrinsicColumnWidth(),
-              1: FlexColumnWidth(),
-            },
-            children: [
-              ..._translators.entries.map(
-                (e) => TableRow(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(right: 10),
-                      child: Text(e.key.getLocaleName()),
-                    ),
-                    Text.rich(
-                      TextSpan(
-                        children: e.value.mapIndexed(
-                          (index, translator) {
-                            return _buildContributor(
-                              label: translator,
-                              primaryColor: primaryColor,
-                              newLine: index != 0,
-                            );
-                          },
-                        ).toList(),
+              );
+            }),
+            const SizedBox(height: 20),
+            Text(t.aboutPage.packagers, style: const TextStyle(fontWeight: FontWeight.bold)),
+            Table(
+              columnWidths: const {
+                0: IntrinsicColumnWidth(),
+                1: FlexColumnWidth(),
+              },
+              children: [
+                ..._packagers.entries.map(
+                  (e) => TableRow(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 10),
+                        child: Text(e.key),
                       ),
-                    ),
-                  ],
+                      Text.rich(
+                        TextSpan(
+                          children: e.value.mapIndexed(
+                            (index, translator) {
+                              return _buildContributor(
+                                label: translator,
+                                primaryColor: primaryColor,
+                                newLine: index != 0,
+                              );
+                            },
+                          ).toList(),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextButton(
-                onPressed: () async {
-                  await launchUrl(Uri.parse('https://github.com/smartworldarafath/Local-Transfer'), mode: LaunchMode.externalApplication);
-                },
-                child: const Text('Homepage'),
-              ),
-              TextButton(
-                onPressed: () async {
-                  await launchUrl(Uri.parse('https://github.com/smartworldarafath/Local-Transfer'), mode: LaunchMode.externalApplication);
-                },
-                child: const Text('Source Code (Github)'),
-              ),
-              TextButton(
-                onPressed: () async {
-                  await launchUrl(Uri.parse('https://github.com/smartworldarafath/Local-Transfer'), mode: LaunchMode.externalApplication);
-                },
-                child: const Text('Source Code (Codeberg)'),
-              ),
-              TextButton(
-                onPressed: () async {
-                  await launchUrl(Uri.parse('https://github.com/smartworldarafath/Local-Transfer/blob/main/LICENSE'), mode: LaunchMode.externalApplication);
-                },
-                child: const Text('License'),
-              ),
-              TextButton(
-                onPressed: () async {
-                  await context.push(() => const LicensePage());
-                },
-                child: const Text('License Notices'),
-              ),
-              TextButton(
-                onPressed: () async {
-                  await context.push(() => const DebugPage());
-                },
-                child: const Text('Debugging'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 50),
-        ],
+              ],
+            ),
+            const SizedBox(height: 20),
+            Text(t.aboutPage.translators, style: const TextStyle(fontWeight: FontWeight.bold)),
+            Table(
+              columnWidths: const {
+                0: IntrinsicColumnWidth(),
+                1: FlexColumnWidth(),
+              },
+              children: [
+                ..._translators.entries.map(
+                  (e) => TableRow(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 10),
+                        child: Text(e.key.getLocaleName()),
+                      ),
+                      Text.rich(
+                        TextSpan(
+                          children: e.value.mapIndexed(
+                            (index, translator) {
+                              return _buildContributor(
+                                label: translator,
+                                primaryColor: primaryColor,
+                                newLine: index != 0,
+                              );
+                            },
+                          ).toList(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextButton(
+                  onPressed: () async {
+                    await launchUrl(Uri.parse('https://github.com/smartworldarafath/Local-Transfer'), mode: LaunchMode.externalApplication);
+                  },
+                  child: const Text('Homepage'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    await launchUrl(Uri.parse('https://github.com/smartworldarafath/Local-Transfer'), mode: LaunchMode.externalApplication);
+                  },
+                  child: const Text('Source Code (Github)'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    await launchUrl(Uri.parse('https://github.com/smartworldarafath/Local-Transfer'), mode: LaunchMode.externalApplication);
+                  },
+                  child: const Text('Source Code (Codeberg)'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    await launchUrl(
+                      Uri.parse('https://github.com/smartworldarafath/Local-Transfer/blob/main/LICENSE'),
+                      mode: LaunchMode.externalApplication,
+                    );
+                  },
+                  child: const Text('License'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    await context.push(() => const LicensePage());
+                  },
+                  child: const Text('License Notices'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    await context.push(() => const DebugPage());
+                  },
+                  child: const Text('Debugging'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 50),
+          ],
+        ),
       ),
     );
   }

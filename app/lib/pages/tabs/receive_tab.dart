@@ -7,6 +7,8 @@ import 'package:localsend_app/provider/animation_provider.dart';
 import 'package:localsend_app/provider/local_ip_provider.dart';
 import 'package:localsend_app/provider/network/server/server_provider.dart';
 import 'package:localsend_app/provider/settings_provider.dart';
+import 'package:localsend_app/provider/ui_theme_provider.dart';
+import 'package:localsend_app/widget/liquid_glass.dart';
 import 'package:localsend_app/util/ip_helper.dart';
 import 'package:localsend_app/widget/airdrop_beacon.dart';
 import 'package:localsend_app/widget/animations/initial_fade_transition.dart';
@@ -135,9 +137,7 @@ class _ReceiveTabState extends State<ReceiveTab> with SingleTickerProviderStateM
                           child: Text(
                             serverState == null
                                 ? t.general.offline
-                                : (localIps.isNotEmpty
-                                    ? localIps.map((ip) => '#${ip.visualId}').toSet().join(' ')
-                                    : '#47'),
+                                : (localIps.isNotEmpty ? localIps.map((ip) => '#${ip.visualId}').toSet().join(' ') : '#47'),
                             style: TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w500,
@@ -154,55 +154,96 @@ class _ReceiveTabState extends State<ReceiveTab> with SingleTickerProviderStateM
                   Padding(
                     padding: const EdgeInsets.only(bottom: 24),
                     child: Center(
-                      child: Container(
-                        height: 58,
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF1E2430) : const Color(0xFFE9EDF5),
-                          borderRadius: BorderRadius.circular(29),
-                          border: Border.all(
-                            color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06),
-                            width: 1,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(isDark ? 0.35 : 0.06),
-                              blurRadius: 16,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(29),
-                            onTap: () async {
-                              await context.push(() => const WebSharePage());
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 28),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.language,
-                                    color: isDark ? Colors.white : Colors.black87,
-                                    size: 22,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    t.receiveTab.link,
-                                    style: TextStyle(
-                                      color: isDark ? Colors.white : Colors.black87,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 16,
+                      child: context.ref.watch(uiThemeProvider) == UiTheme.aiUi
+                          ? LiquidGlassMaterial(
+                              borderRadius: BorderRadius.circular(29),
+                              blurSigma: 16,
+                              tintColor: isDark ? const Color(0xFF1E2430).withOpacity(0.60) : Colors.white.withOpacity(0.65),
+                              border: Border.all(
+                                color: isDark ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.65),
+                                width: 1.0,
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(29),
+                                  onTap: () async {
+                                    await context.push(() => const WebSharePage());
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.language,
+                                          color: isDark ? Colors.white : Colors.black87,
+                                          size: 22,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Text(
+                                          t.receiveTab.link,
+                                          style: TextStyle(
+                                            color: isDark ? Colors.white : Colors.black87,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ],
                                     ),
+                                  ),
+                                ),
+                              ),
+                            )
+                          : Container(
+                              height: 58,
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF1E2430) : const Color(0xFFE9EDF5),
+                                borderRadius: BorderRadius.circular(29),
+                                border: Border.all(
+                                  color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06),
+                                  width: 1,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(isDark ? 0.35 : 0.06),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 4),
                                   ),
                                 ],
                               ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(29),
+                                  onTap: () async {
+                                    await context.push(() => const WebSharePage());
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 28),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.language,
+                                          color: isDark ? Colors.white : Colors.black87,
+                                          size: 22,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Text(
+                                          t.receiveTab.link,
+                                          style: TextStyle(
+                                            color: isDark ? Colors.white : Colors.black87,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                      ),
                     ),
                   ),
                 ],
@@ -244,8 +285,42 @@ class _CornerButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final isAiUi = context.ref.watch(uiThemeProvider) == UiTheme.aiUi;
     final buttonBg = isDark ? const Color(0xFF1E2430) : const Color(0xFFE9EDF5);
     final iconColor = isDark ? Colors.white : Colors.black87;
+
+    Widget buildButton({required Widget iconBtn, Key? key}) {
+      if (isAiUi) {
+        return LiquidGlassMaterial(
+          key: key,
+          borderRadius: BorderRadius.circular(23),
+          blurSigma: 14,
+          tintColor: isDark ? const Color(0xFF1E2430).withOpacity(0.60) : Colors.white.withOpacity(0.65),
+          border: Border.all(
+            color: isDark ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.65),
+            width: 1.0,
+          ),
+          child: SizedBox(
+            width: 46,
+            height: 46,
+            child: iconBtn,
+          ),
+        );
+      }
+      return Container(
+        key: key,
+        width: 46,
+        height: 46,
+        decoration: BoxDecoration(
+          color: buttonBg,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06),
+          ),
+        ),
+        child: iconBtn,
+      );
+    }
 
     return Align(
       alignment: Alignment.topRight,
@@ -259,17 +334,8 @@ class _CornerButtons extends StatelessWidget {
                 AnimatedOpacity(
                   opacity: showHistoryButton ? 1 : 0,
                   duration: const Duration(milliseconds: 200),
-                  child: Container(
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      color: buttonBg,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06),
-                      ),
-                    ),
-                    child: IconButton(
+                  child: buildButton(
+                    iconBtn: IconButton(
                       icon: Icon(Icons.history, color: iconColor, size: 22),
                       tooltip: t.receiveHistoryPage.title,
                       onPressed: () async {
@@ -279,18 +345,9 @@ class _CornerButtons extends StatelessWidget {
                   ),
                 ),
               const SizedBox(width: 12),
-              Container(
+              buildButton(
                 key: const ValueKey('info-btn'),
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  color: buttonBg,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06),
-                  ),
-                ),
-                child: IconButton(
+                iconBtn: IconButton(
                   icon: Icon(Icons.info_outline, color: iconColor, size: 22),
                   onPressed: toggleAdvanced,
                 ),

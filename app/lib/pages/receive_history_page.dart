@@ -5,6 +5,9 @@ import 'package:localsend_app/config/theme.dart';
 import 'package:localsend_app/gen/strings.g.dart';
 import 'package:localsend_app/model/persistence/receive_history_entry.dart';
 import 'package:localsend_app/pages/receive_page.dart';
+import 'package:localsend_app/provider/ui_theme_provider.dart';
+import 'package:localsend_app/widget/ai_ui_background.dart';
+import 'package:localsend_app/widget/liquid_glass.dart';
 import 'package:localsend_app/provider/receive_history_provider.dart';
 import 'package:localsend_app/provider/settings_provider.dart';
 import 'package:localsend_app/util/native/directories.dart';
@@ -26,8 +29,7 @@ enum _EntryOption {
   open,
   showInFolder,
   info,
-  delete
-  ;
+  delete;
 
   String get label {
     return switch (this) {
@@ -64,255 +66,395 @@ class ReceiveHistoryPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final isAiUi = context.ref.watch(uiThemeProvider) == UiTheme.aiUi;
     final entries = context.watch(receiveHistoryProvider);
     final textColor = isDark ? Colors.white : Colors.black87;
     final buttonBg = isDark ? const Color(0xFF2B3344) : const Color(0xFFE2E7F0);
     final backBtnBg = isDark ? const Color(0xFF1E2430) : const Color(0xFFE9EDF5);
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: backBtnBg,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06),
-              ),
-            ),
-            child: IconButton(
-              icon: Icon(Icons.arrow_back, color: textColor, size: 20),
-              onPressed: () => context.pop(),
-            ),
+    return AiUiContainer(
+      child: Scaffold(
+        backgroundColor: isAiUi ? Colors.transparent : theme.scaffoldBackgroundColor,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: isAiUi
+                ? LiquidGlassMaterial(
+                    borderRadius: BorderRadius.circular(20),
+                    blurSigma: 14,
+                    tintColor: isDark ? const Color(0xFF1E2430).withOpacity(0.60) : Colors.white.withOpacity(0.65),
+                    border: Border.all(
+                      color: isDark ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.65),
+                      width: 1.0,
+                    ),
+                    child: IconButton(
+                      icon: Icon(Icons.arrow_back, color: textColor, size: 20),
+                      onPressed: () => context.pop(),
+                    ),
+                  )
+                : Container(
+                    decoration: BoxDecoration(
+                      color: backBtnBg,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06),
+                      ),
+                    ),
+                    child: IconButton(
+                      icon: Icon(Icons.arrow_back, color: textColor, size: 20),
+                      onPressed: () => context.pop(),
+                    ),
+                  ),
           ),
         ),
-      ),
-      body: ResponsiveListView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        children: [
-          // Title: "History"
-          Text(
-            t.receiveHistoryPage.title,
-            style: TextStyle(
-              fontSize: 34,
-              fontWeight: FontWeight.w700,
-              color: textColor,
-              letterSpacing: -0.5,
+        body: ResponsiveListView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          children: [
+            // Title: "History"
+            Text(
+              t.receiveHistoryPage.title,
+              style: TextStyle(
+                fontSize: 34,
+                fontWeight: FontWeight.w700,
+                color: textColor,
+                letterSpacing: -0.5,
+              ),
             ),
-          ),
-          const SizedBox(height: 20),
+            const SizedBox(height: 20),
 
-          // Two Pill Buttons: Open folder & Delete history
-          Row(
-            children: [
-              Container(
-                height: 44,
-                decoration: BoxDecoration(
-                  color: buttonBg,
-                  borderRadius: BorderRadius.circular(22),
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(22),
-                    onTap: checkPlatform([TargetPlatform.iOS])
-                        ? null
-                        : () async {
-                            final destination = context.read(settingsProvider).destination ?? await getDefaultDestinationDirectory();
-                            await openFolder(folderPath: destination);
-                          },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 18),
-                      child: Row(
-                        children: [
-                          Icon(Icons.folder, size: 18, color: textColor),
-                          const SizedBox(width: 8),
-                          Text(
-                            t.receiveHistoryPage.openFolder,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: textColor,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Container(
-                height: 44,
-                decoration: BoxDecoration(
-                  color: buttonBg.withOpacity(entries.isEmpty ? 0.4 : 1.0),
-                  borderRadius: BorderRadius.circular(22),
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(22),
-                    onTap: entries.isEmpty
-                        ? null
-                        : () async {
-                            final result = await showDialog(
-                              context: context,
-                              builder: (_) => const HistoryClearDialog(),
-                            );
-
-                            if (context.mounted && result == true) {
-                              await context.redux(receiveHistoryProvider).dispatchAsync(RemoveAllHistoryEntriesAction());
-                            }
-                          },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 18),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.delete,
-                            size: 18,
-                            color: textColor.withOpacity(entries.isEmpty ? 0.4 : 1.0),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            t.receiveHistoryPage.deleteHistory,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: textColor.withOpacity(entries.isEmpty ? 0.4 : 1.0),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 30),
-
-          // Content / Empty state
-          if (entries.isEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 180),
-              child: Center(
-                child: Text(
-                  t.receiveHistoryPage.empty,
-                  style: TextStyle(
-                    fontSize: 22,
-                    color: textColor.withOpacity(0.5),
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ),
-            )
-          else
-            ...entries.map((entry) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E2430) : const Color(0xFFF0F3F8),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06),
-                    ),
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    onTap: entry.path != null || entry.isMessage
-                        ? () async {
-                            if (entry.isMessage) {
-                              final vm = ViewProvider((ref) {
-                                return ReceivePageVm(
-                                  status: SessionStatus.waiting,
-                                  sender: Device(
-                                    signalingId: null,
-                                    ip: '0.0.0.0',
-                                    version: '1.0.0',
-                                    port: 8080,
-                                    https: false,
-                                    fingerprint: 'fingerprint',
-                                    alias: entry.senderAlias,
-                                    deviceModel: 'deviceModel',
-                                    deviceType: DeviceType.web,
-                                    download: true,
-                                    channels: const [],
+            // Two Pill Buttons: Open folder & Delete history
+            Row(
+              children: [
+                isAiUi
+                    ? LiquidGlassMaterial(
+                        borderRadius: BorderRadius.circular(22),
+                        blurSigma: 14,
+                        tintColor: isDark ? const Color(0xFF1E2430).withOpacity(0.60) : Colors.white.withOpacity(0.65),
+                        border: Border.all(
+                          color: isDark ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.65),
+                          width: 1.0,
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(22),
+                            onTap: checkPlatform([TargetPlatform.iOS])
+                                ? null
+                                : () async {
+                                    final destination = context.read(settingsProvider).destination ?? await getDefaultDestinationDirectory();
+                                    await openFolder(folderPath: destination);
+                                  },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.folder, size: 18, color: textColor),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    t.receiveHistoryPage.openFolder,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: textColor,
+                                    ),
                                   ),
-                                  showSenderInfo: false,
-                                  files: [],
-                                  message: entry.fileName,
-                                  onAccept: () {},
-                                  onDecline: () {},
-                                  onClose: () {},
-                                );
-                              });
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                    : Container(
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: buttonBg,
+                          borderRadius: BorderRadius.circular(22),
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(22),
+                            onTap: checkPlatform([TargetPlatform.iOS])
+                                ? null
+                                : () async {
+                                    final destination = context.read(settingsProvider).destination ?? await getDefaultDestinationDirectory();
+                                    await openFolder(folderPath: destination);
+                                  },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 18),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.folder, size: 18, color: textColor),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    t.receiveHistoryPage.openFolder,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: textColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                const SizedBox(width: 12),
+                isAiUi
+                    ? LiquidGlassMaterial(
+                        borderRadius: BorderRadius.circular(22),
+                        blurSigma: 14,
+                        tintColor: isDark
+                            ? const Color(0xFF1E2430).withOpacity(entries.isEmpty ? 0.30 : 0.60)
+                            : Colors.white.withOpacity(entries.isEmpty ? 0.35 : 0.65),
+                        border: Border.all(
+                          color: isDark ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.65),
+                          width: 1.0,
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(22),
+                            onTap: entries.isEmpty
+                                ? null
+                                : () async {
+                                    final result = await showDialog(
+                                      context: context,
+                                      builder: (_) => const HistoryClearDialog(),
+                                    );
 
-                              await context.push(() => ReceivePage(vm));
-                              return;
-                            }
+                                    if (context.mounted && result == true) {
+                                      await context.redux(receiveHistoryProvider).dispatchAsync(RemoveAllHistoryEntriesAction());
+                                    }
+                                  },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.delete,
+                                    size: 18,
+                                    color: textColor.withOpacity(entries.isEmpty ? 0.4 : 1.0),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    t.receiveHistoryPage.deleteHistory,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: textColor.withOpacity(entries.isEmpty ? 0.4 : 1.0),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                    : Container(
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: buttonBg.withOpacity(entries.isEmpty ? 0.4 : 1.0),
+                          borderRadius: BorderRadius.circular(22),
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(22),
+                            onTap: entries.isEmpty
+                                ? null
+                                : () async {
+                                    final result = await showDialog(
+                                      context: context,
+                                      builder: (_) => const HistoryClearDialog(),
+                                    );
 
-                            await _openFile(context, entry, context.redux(receiveHistoryProvider));
-                          }
-                        : null,
-                    leading: FilePathThumbnail(
-                      path: entry.path,
-                      fileType: entry.fileType,
-                    ),
-                    title: Text(
-                      entry.fileName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontWeight: FontWeight.w600, color: textColor),
-                    ),
-                    subtitle: Text(
-                      '${entry.fileSize.asReadableFileSize} - ${entry.senderAlias}',
-                      style: TextStyle(color: textColor.withOpacity(0.6)),
-                    ),
-                    trailing: PopupMenuButton<_EntryOption>(
-                      icon: Icon(Icons.more_vert, color: textColor.withOpacity(0.7)),
-                      onSelected: (option) async {
-                        switch (option) {
-                          case _EntryOption.open:
-                            await _openFile(context, entry, context.redux(receiveHistoryProvider));
-                            break;
-                          case _EntryOption.showInFolder:
-                            if (entry.path != null) {
-                              await openFolder(folderPath: path.dirname(entry.path!));
-                            }
-                            break;
-                          case _EntryOption.info:
-                            await showDialog(
-                              context: context,
-                              builder: (_) => FileInfoDialog(entry: entry),
-                            );
-                            break;
-                          case _EntryOption.delete:
-                            await context.redux(receiveHistoryProvider).dispatchAsync(RemoveHistoryEntryAction(entry.id));
-                            break;
-                        }
-                      },
-                      itemBuilder: (context) {
-                        final options = entry.path != null ? _optionsAll : _optionsWithoutOpen;
-                        return options.map((option) {
-                          return PopupMenuItem(
-                            value: option,
-                            child: Text(option.label),
-                          );
-                        }).toList();
-                      },
+                                    if (context.mounted && result == true) {
+                                      await context.redux(receiveHistoryProvider).dispatchAsync(RemoveAllHistoryEntriesAction());
+                                    }
+                                  },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 18),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.delete,
+                                    size: 18,
+                                    color: textColor.withOpacity(entries.isEmpty ? 0.4 : 1.0),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    t.receiveHistoryPage.deleteHistory,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: textColor.withOpacity(entries.isEmpty ? 0.4 : 1.0),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+              ],
+            ),
+            const SizedBox(height: 30),
+
+            // Content / Empty state
+            if (entries.isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 180),
+                child: Center(
+                  child: Text(
+                    t.receiveHistoryPage.empty,
+                    style: TextStyle(
+                      fontSize: 22,
+                      color: textColor.withOpacity(0.5),
+                      fontWeight: FontWeight.w400,
                     ),
                   ),
                 ),
-              );
-            }),
-        ],
+              )
+            else
+              ...entries.map((entry) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _HistoryEntryCard(
+                    isAiUi: isAiUi,
+                    isDark: isDark,
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      onTap: entry.path != null || entry.isMessage
+                          ? () async {
+                              if (entry.isMessage) {
+                                final vm = ViewProvider((ref) {
+                                  return ReceivePageVm(
+                                    status: SessionStatus.waiting,
+                                    sender: Device(
+                                      signalingId: null,
+                                      ip: '0.0.0.0',
+                                      version: '1.0.0',
+                                      port: 8080,
+                                      https: false,
+                                      fingerprint: 'fingerprint',
+                                      alias: entry.senderAlias,
+                                      deviceModel: 'deviceModel',
+                                      deviceType: DeviceType.web,
+                                      download: true,
+                                      channels: const [],
+                                    ),
+                                    showSenderInfo: false,
+                                    files: [],
+                                    message: entry.fileName,
+                                    onAccept: () {},
+                                    onDecline: () {},
+                                    onClose: () {},
+                                  );
+                                });
+
+                                await context.push(() => ReceivePage(vm));
+                                return;
+                              }
+
+                              await _openFile(context, entry, context.redux(receiveHistoryProvider));
+                            }
+                          : null,
+                      leading: FilePathThumbnail(
+                        path: entry.path,
+                        fileType: entry.fileType,
+                      ),
+                      title: Text(
+                        entry.fileName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontWeight: FontWeight.w600, color: textColor),
+                      ),
+                      subtitle: Text(
+                        '${entry.fileSize.asReadableFileSize} - ${entry.senderAlias}',
+                        style: TextStyle(color: textColor.withOpacity(0.6)),
+                      ),
+                      trailing: PopupMenuButton<_EntryOption>(
+                        icon: Icon(Icons.more_vert, color: textColor.withOpacity(0.7)),
+                        onSelected: (option) async {
+                          switch (option) {
+                            case _EntryOption.open:
+                              await _openFile(context, entry, context.redux(receiveHistoryProvider));
+                              break;
+                            case _EntryOption.showInFolder:
+                              if (entry.path != null) {
+                                await openFolder(folderPath: path.dirname(entry.path!));
+                              }
+                              break;
+                            case _EntryOption.info:
+                              await showDialog(
+                                context: context,
+                                builder: (_) => FileInfoDialog(entry: entry),
+                              );
+                              break;
+                            case _EntryOption.delete:
+                              await context.redux(receiveHistoryProvider).dispatchAsync(RemoveHistoryEntryAction(entry.id));
+                              break;
+                          }
+                        },
+                        itemBuilder: (context) {
+                          final options = entry.path != null ? _optionsAll : _optionsWithoutOpen;
+                          return options.map((option) {
+                            return PopupMenuItem(
+                              value: option,
+                              child: Text(option.label),
+                            );
+                          }).toList();
+                        },
+                      ),
+                    ),
+                  ),
+                );
+              }),
+          ],
+        ),
       ),
+    );
+  }
+}
+
+class _HistoryEntryCard extends StatelessWidget {
+  final bool isAiUi;
+  final bool isDark;
+  final Widget child;
+
+  const _HistoryEntryCard({
+    required this.isAiUi,
+    required this.isDark,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (isAiUi) {
+      return LiquidGlassMaterial(
+        borderRadius: BorderRadius.circular(20),
+        blurSigma: 14,
+        tintColor: isDark ? const Color(0xFF1E2430).withOpacity(0.60) : Colors.white.withOpacity(0.65),
+        border: Border.all(
+          color: isDark ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.65),
+          width: 1.0,
+        ),
+        child: child,
+      );
+    }
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E2430) : const Color(0xFFF0F3F8),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06),
+        ),
+      ),
+      child: child,
     );
   }
 }

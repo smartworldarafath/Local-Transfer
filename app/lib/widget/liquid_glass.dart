@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:localsend_app/provider/ui_theme_provider.dart';
+import 'package:refena_flutter/refena_flutter.dart';
 
 /// Physics and configuration constants from Liquid Glass Engine
 /// (C:\Users\Fahad\Downloads\LG\LG\LiquidGlassEffect.java)
@@ -45,10 +47,8 @@ class LiquidGlassMaterial extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final baseTint = tintColor ??
-        (isDark
-            ? Colors.white.withOpacity(0.08 * (intensity / 0.75))
-            : Colors.white.withOpacity(0.90 * (intensity / 0.75)));
+    final baseTint =
+        tintColor ?? (isDark ? Colors.white.withOpacity(0.08 * (intensity / 0.75)) : Colors.white.withOpacity(0.90 * (intensity / 0.75)));
 
     // Subtle vertical light gradient if requested, avoiding harsh horizontal color splits
     final Gradient? gradient = useGradient
@@ -77,9 +77,7 @@ class LiquidGlassMaterial extends StatelessWidget {
             gradient: gradient,
             border: showSpecularBorder
                 ? Border.all(
-                    color: isDark
-                        ? Colors.white.withOpacity(0.14 * (intensity / 0.75))
-                        : Colors.black.withOpacity(0.08),
+                    color: isDark ? Colors.white.withOpacity(0.14 * (intensity / 0.75)) : Colors.black.withOpacity(0.08),
                     width: 1.0,
                   )
                 : border,
@@ -137,8 +135,7 @@ class LiquidGlassButton extends StatefulWidget {
   State<LiquidGlassButton> createState() => _LiquidGlassButtonState();
 }
 
-class _LiquidGlassButtonState extends State<LiquidGlassButton>
-    with SingleTickerProviderStateMixin {
+class _LiquidGlassButtonState extends State<LiquidGlassButton> with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _scaleAnimation;
   late final Animation<double> _intensityAnimation;
@@ -200,9 +197,7 @@ class _LiquidGlassButtonState extends State<LiquidGlassButton>
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
-    final primaryTint = widget.filled
-        ? (colorScheme.primary.withOpacity(isDark ? 0.42 : 0.75))
-        : widget.tintColor;
+    final primaryTint = widget.filled ? (colorScheme.primary.withOpacity(isDark ? 0.42 : 0.75)) : widget.tintColor;
 
     return AnimatedBuilder(
       animation: _controller,
@@ -259,6 +254,22 @@ class LiquidGlassDock extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
+    final isAiUi = context.ref.watch(uiThemeProvider) == UiTheme.aiUi;
+
+    final dockTint = isAiUi
+        ? (isDark ? const Color(0xFF1E2430).withOpacity(0.60) : Colors.white.withOpacity(0.65))
+        : (isDark ? const Color(0xFF161922).withOpacity(0.92) : Colors.white.withOpacity(0.92));
+
+    final dockBorder = isAiUi
+        ? Border.all(
+            color: isDark ? Colors.white.withOpacity(0.14) : Colors.white.withOpacity(0.70),
+            width: 1.0,
+          )
+        : null;
+
+    final activePillColor = isAiUi
+        ? (isDark ? const Color(0xFF4C7588) : const Color(0xFF6B8E9F))
+        : (isDark ? const Color(0xFF2C3549) : colorScheme.primary.withOpacity(0.18));
 
     return SafeArea(
       top: false,
@@ -267,9 +278,9 @@ class LiquidGlassDock extends StatelessWidget {
         child: LiquidGlassMaterial(
           borderRadius: BorderRadius.circular(35),
           blurSigma: 20,
-          tintColor: isDark
-              ? const Color(0xFF161922).withOpacity(0.92)
-              : Colors.white.withOpacity(0.92),
+          tintColor: dockTint,
+          border: dockBorder,
+          showSpecularBorder: !isAiUi,
           intensity: 0.95,
           child: Container(
             height: 70,
@@ -292,9 +303,7 @@ class LiquidGlassDock extends StatelessWidget {
                       child: Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(27),
-                          color: isDark
-                              ? const Color(0xFF2C3549)
-                              : colorScheme.primary.withOpacity(0.18),
+                          color: activePillColor,
                         ),
                       ),
                     ),
@@ -306,6 +315,7 @@ class LiquidGlassDock extends StatelessWidget {
                             child: _LiquidGlassDockItem(
                               destination: destinations[i],
                               isSelected: i == selectedIndex,
+                              isAiUi: isAiUi,
                               onTap: () => onDestinationSelected(i),
                             ),
                           ),
@@ -335,11 +345,13 @@ class LiquidGlassDockDestination {
 class _LiquidGlassDockItem extends StatefulWidget {
   final LiquidGlassDockDestination destination;
   final bool isSelected;
+  final bool isAiUi;
   final VoidCallback onTap;
 
   const _LiquidGlassDockItem({
     required this.destination,
     required this.isSelected,
+    this.isAiUi = false,
     required this.onTap,
   });
 
@@ -347,8 +359,7 @@ class _LiquidGlassDockItem extends StatefulWidget {
   State<_LiquidGlassDockItem> createState() => _LiquidGlassDockItemState();
 }
 
-class _LiquidGlassDockItemState extends State<_LiquidGlassDockItem>
-    with SingleTickerProviderStateMixin {
+class _LiquidGlassDockItemState extends State<_LiquidGlassDockItem> with SingleTickerProviderStateMixin {
   late final AnimationController _pressController;
   late final Animation<double> _scaleAnimation;
 
@@ -378,10 +389,16 @@ class _LiquidGlassDockItemState extends State<_LiquidGlassDockItem>
     final isSelected = widget.isSelected;
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final activeColor = isDark ? const Color(0xFF62A2FF) : colorScheme.primary;
-    final inactiveColor = isDark
-        ? Colors.white.withOpacity(0.55)
-        : Colors.black.withOpacity(0.55);
+    final Color activeColor;
+    final Color inactiveColor;
+
+    if (widget.isAiUi) {
+      activeColor = Colors.white;
+      inactiveColor = isDark ? const Color(0xFFB0BAC7) : const Color(0xFF2C323B);
+    } else {
+      activeColor = isDark ? const Color(0xFF62A2FF) : colorScheme.primary;
+      inactiveColor = isDark ? Colors.white.withOpacity(0.55) : Colors.black.withOpacity(0.55);
+    }
 
     return AnimatedBuilder(
       animation: _pressController,
@@ -441,4 +458,3 @@ class _LiquidGlassDockItemState extends State<_LiquidGlassDockItem>
     );
   }
 }
-

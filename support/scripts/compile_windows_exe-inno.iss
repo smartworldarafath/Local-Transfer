@@ -12,7 +12,7 @@
 #endif
 
 #define MyAppName "Local Transfer"
-#define MyAppVersion "1.3.5"
+#define MyAppVersion "1.3.6"
 #define MyAppPublisher "smartworldarafath"
 #define MyAppURL "https://github.com/smartworldarafath/Local-Transfer"
 #define MyAppExeName "localsend_app.exe"

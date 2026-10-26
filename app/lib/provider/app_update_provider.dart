@@ -125,13 +125,16 @@ class AppReleaseInfo {
       htmlUrl: json['html_url'] as String? ?? '',
       apkDownloadUrl: apkUrl ?? 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tagName/LocalTransfer-$tagName.apk',
       apkSize: apkSize,
-      windowsDownloadUrl: windowsUrl ?? 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tagName/LocalTransfer-$tagName-windows-x64.exe',
+      windowsDownloadUrl:
+          windowsUrl ?? 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tagName/LocalTransfer-$tagName-windows-x64.exe',
       windowsSize: windowsSize,
       macosDownloadUrl: macosUrl ?? 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tagName/LocalTransfer-$tagName-macos.dmg',
       macosSize: macosSize,
-      linuxDownloadUrl: linuxUrl ?? 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tagName/LocalTransfer-$tagName-linux-x86_64.AppImage',
+      linuxDownloadUrl:
+          linuxUrl ?? 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tagName/LocalTransfer-$tagName-linux-x86_64.AppImage',
       linuxSize: linuxSize,
-      iosDownloadUrl: iosUrl ?? 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tagName/LocalTransfer-$tagName-ios-universal.ipa',
+      iosDownloadUrl:
+          iosUrl ?? 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tagName/LocalTransfer-$tagName-ios-universal.ipa',
       iosSize: iosSize,
     );
   }
@@ -144,11 +147,20 @@ class AppReleaseInfo {
       name: json['name'] as String? ?? 'v${json['version']}',
       body: json['body'] as String? ?? '',
       htmlUrl: json['html_url'] as String? ?? 'https://github.com/smartworldarafath/Local-Transfer/releases',
-      apkDownloadUrl: downloads['android'] as String? ?? 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tag/LocalTransfer-$tag.apk',
-      windowsDownloadUrl: (downloads['windows_exe'] ?? downloads['windows_zip']) as String? ?? 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tag/LocalTransfer-$tag-windows-x64.exe',
-      macosDownloadUrl: (downloads['macos_dmg'] ?? downloads['macos_zip']) as String? ?? 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tag/LocalTransfer-$tag-macos.dmg',
-      linuxDownloadUrl: (downloads['linux_appimage'] ?? downloads['linux_tar']) as String? ?? 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tag/LocalTransfer-$tag-linux-x86_64.AppImage',
-      iosDownloadUrl: downloads['ios_ipa'] as String? ?? 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tag/LocalTransfer-$tag-ios-universal.ipa',
+      apkDownloadUrl:
+          downloads['android'] as String? ?? 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tag/LocalTransfer-$tag.apk',
+      windowsDownloadUrl:
+          (downloads['windows_exe'] ?? downloads['windows_zip']) as String? ??
+          'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tag/LocalTransfer-$tag-windows-x64.exe',
+      macosDownloadUrl:
+          (downloads['macos_dmg'] ?? downloads['macos_zip']) as String? ??
+          'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tag/LocalTransfer-$tag-macos.dmg',
+      linuxDownloadUrl:
+          (downloads['linux_appimage'] ?? downloads['linux_tar']) as String? ??
+          'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tag/LocalTransfer-$tag-linux-x86_64.AppImage',
+      iosDownloadUrl:
+          downloads['ios_ipa'] as String? ??
+          'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tag/LocalTransfer-$tag-ios-universal.ipa',
     );
   }
 
@@ -175,7 +187,8 @@ class AppReleaseInfo {
         apkDownloadUrl: 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tagName/LocalTransfer-$tagName.apk',
         windowsDownloadUrl: 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tagName/LocalTransfer-$tagName-windows-x64.exe',
         macosDownloadUrl: 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tagName/LocalTransfer-$tagName-macos.dmg',
-        linuxDownloadUrl: 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tagName/LocalTransfer-$tagName-linux-x86_64.AppImage',
+        linuxDownloadUrl:
+            'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tagName/LocalTransfer-$tagName-linux-x86_64.AppImage',
         iosDownloadUrl: 'https://github.com/smartworldarafath/Local-Transfer/releases/download/$tagName/LocalTransfer-$tagName-ios-universal.ipa',
       );
     } catch (_) {
@@ -312,7 +325,7 @@ class AppUpdateNotifier extends Notifier<AppUpdateState> {
         throw Exception('Unable to reach update servers. Please check your internet connection.');
       }
 
-      final currentVersionCombined = ref.read(versionProvider).data?.combinedString ?? 'v1.3.5 (Beta 4)';
+      final currentVersionCombined = ref.read(versionProvider).data?.combinedString ?? 'v1.3.6 (Beta 4.1)';
       final isNewer = _isVersionGreater(latest.tagName, currentVersionCombined);
 
       if (isNewer) {

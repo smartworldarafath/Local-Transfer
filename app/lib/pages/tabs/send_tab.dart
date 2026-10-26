@@ -14,6 +14,8 @@ import 'package:localsend_app/provider/network/scan_facade.dart';
 import 'package:localsend_app/provider/network/send_provider.dart';
 import 'package:localsend_app/provider/selection/selected_sending_files_provider.dart';
 import 'package:localsend_app/provider/settings_provider.dart';
+import 'package:localsend_app/provider/ui_theme_provider.dart';
+import 'package:localsend_app/widget/liquid_glass.dart';
 import 'package:localsend_app/util/favorites.dart';
 import 'package:localsend_app/util/native/file_picker.dart';
 import 'package:localsend_app/util/native/platform_check.dart';
@@ -51,6 +53,7 @@ class SendTab extends StatelessWidget {
       init: (context) async => context.global.dispatchAsync(SendTabInitAction(context)),
       builder: (context, vm) {
         final ref = context.ref;
+        final isAiUi = ref.watch(uiThemeProvider) == UiTheme.aiUi;
 
         // Custom ordered options to match 1791382743298.jpg:
         // Row 1: File, Media, Paste (Clipboard)
@@ -117,95 +120,149 @@ class SendTab extends StatelessWidget {
                 },
               )
             else
-              Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: cardBg,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          t.sendTab.selection.title,
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: isAiUi
+                    ? LiquidGlassMaterial(
+                        borderRadius: BorderRadius.circular(24),
+                        blurSigma: 16,
+                        tintColor: isDark ? const Color(0xFF1E2430).withOpacity(0.60) : Colors.white.withOpacity(0.65),
+                        border: Border.all(
+                          color: isDark ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.65),
+                          width: 1.0,
                         ),
-                        const Spacer(),
-                        IconButton(
-                          onPressed: () => ref.redux(selectedSendingFilesProvider).dispatch(ClearSelectionAction()),
-                          icon: Icon(Icons.close, color: textColor.withOpacity(0.7)),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      t.sendTab.selection.files(files: vm.selectedFiles.length),
-                      style: TextStyle(color: textColor.withOpacity(0.8)),
-                    ),
-                    Text(
-                      t.sendTab.selection.size(size: vm.selectedFiles.fold(0, (prev, curr) => prev + curr.size).asReadableFileSize),
-                      style: TextStyle(color: textColor.withOpacity(0.8)),
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      height: defaultThumbnailSize,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: vm.selectedFiles.length,
-                        itemBuilder: (context, index) {
-                          final file = vm.selectedFiles[index];
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 10),
-                            child: SmartFileThumbnail.fromCrossFile(file),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: () async {
-                            await context.push(() => const SelectedFilesPage());
-                          },
-                          child: Text(t.general.edit),
-                        ),
-                        const SizedBox(width: 10),
-                        ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF357AF6),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        child: Padding(
+                          padding: const EdgeInsets.all(18),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    t.sendTab.selection.title,
+                                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),
+                                  ),
+                                  const Spacer(),
+                                  IconButton(
+                                    onPressed: () => ref.redux(selectedSendingFilesProvider).dispatch(ClearSelectionAction()),
+                                    icon: Icon(Icons.close, color: textColor.withOpacity(0.7)),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                t.sendTab.selection.files(files: vm.selectedFiles.length),
+                                style: TextStyle(color: textColor.withOpacity(0.8)),
+                              ),
+                              Text(
+                                t.sendTab.selection.size(size: vm.selectedFiles.fold(0, (prev, curr) => prev + curr.size).asReadableFileSize),
+                                style: TextStyle(color: textColor.withOpacity(0.8)),
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  OutlinedButton.icon(
+                                    onPressed: () async {
+                                      final pickerOptions = [
+                                        FilePickerOption.file,
+                                        FilePickerOption.folder,
+                                        if (checkPlatformWithGallery()) FilePickerOption.media,
+                                        FilePickerOption.text,
+                                        if (checkPlatform([TargetPlatform.android])) FilePickerOption.app,
+                                      ];
+                                      if (pickerOptions.length == 1) {
+                                        await ref.global.dispatchAsync(
+                                          PickFileAction(
+                                            option: pickerOptions.first,
+                                            context: context,
+                                          ),
+                                        );
+                                        return;
+                                      }
+                                      await AddFileDialog.open(
+                                        context: context,
+                                        options: pickerOptions,
+                                      );
+                                    },
+                                    icon: const Icon(Icons.add),
+                                    label: Text(t.general.add),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
-                          onPressed: () async {
-                            if (pickerOptions.length == 1) {
-                              await ref.global.dispatchAsync(
-                                PickFileAction(
-                                  option: pickerOptions.first,
-                                  context: context,
-                                ),
-                              );
-                              return;
-                            }
-                            await AddFileDialog.open(
-                              context: context,
-                              options: pickerOptions,
-                            );
-                          },
-                          icon: const Icon(Icons.add),
-                          label: Text(t.general.add),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
+                      )
+                    : Container(
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          color: cardBg,
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  t.sendTab.selection.title,
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),
+                                ),
+                                const Spacer(),
+                                IconButton(
+                                  onPressed: () => ref.redux(selectedSendingFilesProvider).dispatch(ClearSelectionAction()),
+                                  icon: Icon(Icons.close, color: textColor.withOpacity(0.7)),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              t.sendTab.selection.files(files: vm.selectedFiles.length),
+                              style: TextStyle(color: textColor.withOpacity(0.8)),
+                            ),
+                            Text(
+                              t.sendTab.selection.size(size: vm.selectedFiles.fold(0, (prev, curr) => prev + curr.size).asReadableFileSize),
+                              style: TextStyle(color: textColor.withOpacity(0.8)),
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                OutlinedButton.icon(
+                                  onPressed: () async {
+                                    final pickerOptions = [
+                                      FilePickerOption.file,
+                                      FilePickerOption.folder,
+                                      if (checkPlatformWithGallery()) FilePickerOption.media,
+                                      FilePickerOption.text,
+                                      if (checkPlatform([TargetPlatform.android])) FilePickerOption.app,
+                                    ];
+                                    if (pickerOptions.length == 1) {
+                                      await ref.global.dispatchAsync(
+                                        PickFileAction(
+                                          option: pickerOptions.first,
+                                          context: context,
+                                        ),
+                                      );
+                                      return;
+                                    }
+                                    await AddFileDialog.open(
+                                      context: context,
+                                      options: pickerOptions,
+                                    );
+                                  },
+                                  icon: const Icon(Icons.add),
+                                  label: Text(t.general.add),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
               ),
 
             const SizedBox(height: 28),
@@ -255,60 +312,117 @@ class SendTab extends StatelessWidget {
 
             // Nearby Devices Card or Empty Carousel Placeholder Card
             if (vm.nearbyDevices.isEmpty)
-              Container(
-                height: 110,
-                decoration: BoxDecoration(
-                  color: cardBg,
+              if (isAiUi)
+                LiquidGlassMaterial(
                   borderRadius: BorderRadius.circular(24),
+                  blurSigma: 16,
+                  tintColor: isDark ? const Color(0xFF1E2430).withOpacity(0.60) : Colors.white.withOpacity(0.65),
                   border: Border.all(
-                    color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06),
+                    color: isDark ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.65),
+                    width: 1.0,
                   ),
-                ),
-                child: Stack(
-                  children: [
-                    Center(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.language,
-                            size: 44,
-                            color: textColor.withOpacity(0.7),
+                  child: SizedBox(
+                    height: 110,
+                    child: Stack(
+                      children: [
+                        Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.language,
+                                size: 44,
+                                color: textColor.withOpacity(0.7),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                        Positioned(
+                          bottom: 12,
+                          left: 0,
+                          right: 0,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 16,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  color: textColor.withOpacity(0.8),
+                                  borderRadius: BorderRadius.circular(3),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Container(
+                                width: 16,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  color: textColor.withOpacity(0.25),
+                                  borderRadius: BorderRadius.circular(3),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    // Carousel page indicator dots
-                    Positioned(
-                      bottom: 12,
-                      left: 0,
-                      right: 0,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 16,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: textColor.withOpacity(0.8),
-                              borderRadius: BorderRadius.circular(3),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Container(
-                            width: 16,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: textColor.withOpacity(0.25),
-                              borderRadius: BorderRadius.circular(3),
-                            ),
-                          ),
-                        ],
-                      ),
+                  ),
+                )
+              else
+                Container(
+                  height: 110,
+                  decoration: BoxDecoration(
+                    color: cardBg,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06),
                     ),
-                  ],
-                ),
-              )
+                  ),
+                  child: Stack(
+                    children: [
+                      Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.language,
+                              size: 44,
+                              color: textColor.withOpacity(0.7),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Carousel page indicator dots
+                      Positioned(
+                        bottom: 12,
+                        left: 0,
+                        right: 0,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 16,
+                              height: 6,
+                              decoration: BoxDecoration(
+                                color: textColor.withOpacity(0.8),
+                                borderRadius: BorderRadius.circular(3),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Container(
+                              width: 16,
+                              height: 6,
+                              decoration: BoxDecoration(
+                                color: textColor.withOpacity(0.25),
+                                borderRadius: BorderRadius.circular(3),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                )
             else
               ...vm.nearbyDevices.map((device) {
                 final favoriteEntry = vm.favoriteDevices.findDevice(device);
@@ -338,35 +452,65 @@ class SendTab extends StatelessWidget {
 
             // Troubleshoot Pill Button
             Center(
-              child: Container(
-                height: 38,
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF2C3545) : const Color(0xFFDCE2EE),
-                  borderRadius: BorderRadius.circular(19),
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(19),
-                    onTap: () async {
-                      await context.push(() => const TroubleshootPage());
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Center(
-                        child: Text(
-                          t.troubleshootPage.title,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: textColor,
+              child: isAiUi
+                  ? LiquidGlassMaterial(
+                      borderRadius: BorderRadius.circular(19),
+                      blurSigma: 14,
+                      tintColor: isDark ? const Color(0xFF1E2430).withOpacity(0.60) : Colors.white.withOpacity(0.65),
+                      border: Border.all(
+                        color: isDark ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.65),
+                        width: 1.0,
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(19),
+                          onTap: () async {
+                            await context.push(() => const TroubleshootPage());
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 9),
+                            child: Text(
+                              t.troubleshootPage.title,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: textColor,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  : Container(
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF2C3545) : const Color(0xFFDCE2EE),
+                        borderRadius: BorderRadius.circular(19),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(19),
+                          onTap: () async {
+                            await context.push(() => const TroubleshootPage());
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Center(
+                              child: Text(
+                                t.troubleshootPage.title,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: textColor,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-              ),
             ),
 
             const SizedBox(height: 20),
@@ -424,6 +568,29 @@ class _CircularActionBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isAiUi = context.ref.watch(uiThemeProvider) == UiTheme.aiUi;
+
+    if (isAiUi) {
+      return LiquidGlassMaterial(
+        borderRadius: BorderRadius.circular(22),
+        blurSigma: 14,
+        tintColor: isDark ? const Color(0xFF1E2430).withOpacity(0.60) : Colors.white.withOpacity(0.65),
+        border: Border.all(
+          color: isDark ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.65),
+          width: 1.0,
+        ),
+        child: SizedBox(
+          width: 44,
+          height: 44,
+          child: IconButton(
+            icon: Icon(icon, color: iconColor, size: 20),
+            onPressed: onTap,
+            padding: EdgeInsets.zero,
+          ),
+        ),
+      );
+    }
+
     return Container(
       width: 44,
       height: 44,
@@ -457,6 +624,39 @@ class _SendModeCircleBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isAiUi = context.ref.watch(uiThemeProvider) == UiTheme.aiUi;
+
+    if (isAiUi) {
+      return LiquidGlassMaterial(
+        borderRadius: BorderRadius.circular(22),
+        blurSigma: 14,
+        tintColor: isDark ? const Color(0xFF1E2430).withOpacity(0.60) : Colors.white.withOpacity(0.65),
+        border: Border.all(
+          color: isDark ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.65),
+          width: 1.0,
+        ),
+        child: SizedBox(
+          width: 44,
+          height: 44,
+          child: PopupMenuButton<SendMode>(
+            icon: Icon(Icons.settings_outlined, color: iconColor, size: 20),
+            padding: EdgeInsets.zero,
+            onSelected: onSelect,
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: SendMode.single,
+                child: Text(t.sendTab.sendModes.single),
+              ),
+              PopupMenuItem(
+                value: SendMode.multiple,
+                child: Text(t.sendTab.sendModes.multiple),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Container(
       width: 44,
       height: 44,

@@ -12,7 +12,9 @@ import 'package:localsend_app/pages/settings/network_interfaces_page.dart';
 import 'package:localsend_app/pages/tabs/settings_tab_controller.dart';
 import 'package:localsend_app/provider/network/server/server_provider.dart';
 import 'package:localsend_app/provider/settings_provider.dart';
+import 'package:localsend_app/provider/ui_theme_provider.dart';
 import 'package:localsend_app/provider/version_provider.dart';
+import 'package:localsend_app/widget/liquid_glass.dart';
 import 'package:localsend_app/util/alias_generator.dart';
 import 'package:localsend_app/util/device_type_ext.dart';
 import 'package:localsend_app/util/i18n.dart';
@@ -352,7 +354,7 @@ class SettingsTab extends StatelessWidget {
               children: [
                 _SettingsPillButtonRow(
                   label: 'Version',
-                  buttonLabel: 'v1.3.5 (Beta 4)',
+                  buttonLabel: 'v1.3.6 (Beta 4.1)',
                   onTap: () => context.push(() => const AboutPage()),
                 ),
                 _SettingsPillButtonRow(
@@ -379,6 +381,24 @@ class _SettingsPillCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isAiUi = context.ref.watch(uiThemeProvider) == UiTheme.aiUi;
+
+    if (isAiUi) {
+      return LiquidGlassMaterial(
+        borderRadius: BorderRadius.circular(28),
+        blurSigma: 16,
+        tintColor: isDark ? const Color(0xFF1E2430).withOpacity(0.60) : Colors.white.withOpacity(0.65),
+        border: Border.all(
+          color: isDark ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.65),
+          width: 1.0,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+          child: child,
+        ),
+      );
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E2430) : const Color(0xFFF0F3F8),
@@ -402,6 +422,38 @@ class _SettingsPillGroup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isAiUi = context.ref.watch(uiThemeProvider) == UiTheme.aiUi;
+
+    if (isAiUi) {
+      return LiquidGlassMaterial(
+        borderRadius: BorderRadius.circular(24),
+        blurSigma: 16,
+        tintColor: isDark ? const Color(0xFF1E2430).withOpacity(0.60) : Colors.white.withOpacity(0.65),
+        border: Border.all(
+          color: isDark ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.65),
+          width: 1.0,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          child: Column(
+            children: [
+              for (int i = 0; i < children.length; i++) ...[
+                if (i > 0)
+                  Divider(
+                    color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06),
+                    height: 1,
+                  ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: children[i],
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E2430) : const Color(0xFFF0F3F8),
@@ -449,7 +501,10 @@ class _SettingsDropdownRow<T> extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
-    final capsuleBg = isDark ? const Color(0xFF2B3344) : const Color(0xFFE2E7F0);
+    final isAiUi = context.ref.watch(uiThemeProvider) == UiTheme.aiUi;
+    final capsuleBg = isAiUi
+        ? (isDark ? const Color(0xFF2B3344).withOpacity(0.70) : const Color(0xFFE2E7F0).withOpacity(0.75))
+        : (isDark ? const Color(0xFF2B3344) : const Color(0xFFE2E7F0));
 
     return SizedBox(
       height: 48,
@@ -510,7 +565,10 @@ class _SettingsPillButtonRow extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
-    final capsuleBg = isDark ? const Color(0xFF2B3344) : const Color(0xFFE2E7F0);
+    final isAiUi = context.ref.watch(uiThemeProvider) == UiTheme.aiUi;
+    final capsuleBg = isAiUi
+        ? (isDark ? const Color(0xFF2B3344).withOpacity(0.70) : const Color(0xFFE2E7F0).withOpacity(0.75))
+        : (isDark ? const Color(0xFF2B3344) : const Color(0xFFE2E7F0));
 
     return SizedBox(
       height: 48,
