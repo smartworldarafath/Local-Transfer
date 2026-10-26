@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:localsend_app/provider/version_provider.dart';
 import 'package:localsend_app/util/native/open_file.dart';
@@ -313,7 +312,7 @@ class AppUpdateNotifier extends Notifier<AppUpdateState> {
         throw Exception('Unable to reach update servers. Please check your internet connection.');
       }
 
-      final currentVersionCombined = ref.read(versionProvider).data?.combinedString ?? 'v1.2.6 (Beta 2.1)';
+      final currentVersionCombined = ref.read(versionProvider).data?.combinedString ?? 'v1.3.0 (Beta 3)';
       final isNewer = _isVersionGreater(latest.tagName, currentVersionCombined);
 
       if (isNewer) {

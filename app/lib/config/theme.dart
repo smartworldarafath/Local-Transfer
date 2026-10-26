@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:localsend_app/gen/strings.g.dart';
 import 'package:localsend_app/model/persistence/color_mode.dart';
+import 'package:localsend_app/provider/background_look_provider.dart';
 import 'package:localsend_app/provider/device_info_provider.dart';
 import 'package:localsend_app/util/native/platform_check.dart';
 import 'package:localsend_app/util/ui/dynamic_colors.dart';
@@ -10,7 +11,7 @@ import 'package:yaru/yaru.dart' as yaru;
 
 final _borderRadius = BorderRadius.circular(5);
 
-ThemeData getTheme(ColorMode colorMode, Color customColor, Brightness brightness, DynamicColors? dynamicColors) {
+ThemeData getTheme(ColorMode colorMode, Color customColor, Brightness brightness, DynamicColors? dynamicColors, [BackgroundLook backgroundLook = BackgroundLook.defaultUi]) {
   if (colorMode == ColorMode.yaru) {
     return _getYaruTheme(brightness);
   }
@@ -49,7 +50,9 @@ ThemeData getTheme(ColorMode colorMode, Color customColor, Brightness brightness
     fontFamily = null;
   }
 
+  final customBg = backgroundLook.getScaffoldColor(brightness == Brightness.dark);
   return ThemeData(
+    scaffoldBackgroundColor: customBg,
     colorScheme: colorScheme,
     useMaterial3: true,
     // same density on all platforms so desktop matches mobile (defaults to compact on desktop)

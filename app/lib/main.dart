@@ -56,6 +56,7 @@ class LocalSendApp extends StatelessWidget {
       settingsProvider.select((settings) => (settings.theme, settings.colorMode, settings.customColor)),
     );
     final dynamicColors = ref.watch(dynamicColorsProvider);
+    final backgroundLook = ref.watch(backgroundLookProvider);
     return TrayWatcher(
       child: WindowWatcher(
         child: LifeCycleWatcher(
@@ -89,8 +90,8 @@ class LocalSendApp extends StatelessWidget {
               supportedLocales: AppLocaleUtils.supportedLocales,
               localizationsDelegates: GlobalMaterialLocalizations.delegates,
               debugShowCheckedModeBanner: false,
-              theme: getTheme(colorMode, customColor, Brightness.light, dynamicColors),
-              darkTheme: getTheme(colorMode, customColor, Brightness.dark, dynamicColors),
+              theme: getTheme(colorMode, customColor, Brightness.light, dynamicColors, backgroundLook),
+              darkTheme: getTheme(colorMode, customColor, Brightness.dark, dynamicColors, backgroundLook),
               themeMode: colorMode == ColorMode.oled ? ThemeMode.dark : themeMode,
               builder: (context, child) => WindowBrightnessWatcher(child: child!),
               navigatorKey: context.read(navigationProvider).key,
