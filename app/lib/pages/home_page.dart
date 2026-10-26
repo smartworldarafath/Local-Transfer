@@ -20,8 +20,7 @@ import 'package:refena_flutter/refena_flutter.dart';
 enum HomeTab {
   receive(Icons.file_download_outlined),
   send(Icons.near_me_outlined),
-  settings(Icons.settings_outlined)
-  ;
+  settings(Icons.settings_outlined);
 
   const HomeTab(this.icon);
 
@@ -108,82 +107,84 @@ class _HomePageState extends State<HomePage> with Refena {
       },
       child: ResponsiveBuilder(
         builder: (sizingInformation) {
+          final isAiUi = context.ref.watch(uiThemeProvider) == UiTheme.aiUi;
           return AiUiContainer(
             child: Scaffold(
-              backgroundColor: context.ref.watch(uiThemeProvider) == UiTheme.aiUi ? Colors.transparent : null,
-            body: Row(
-              children: [
-                if (!sizingInformation.isMobile)
-                  NavigationRail(
-                    selectedIndex: vm.currentTab.index,
-                    onDestinationSelected: (index) => vm.changeTab(HomeTab.values[index]),
-                    extended: sizingInformation.isDesktop,
-                    backgroundColor: Theme.of(context).cardColorWithElevation,
-                    leading: sizingInformation.isDesktop
-                        ? const Column(
-                            children: [
-                              SizedBox(height: 20),
-                              Text(
-                                'Local Transfer',
-                                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-                                textAlign: TextAlign.center,
-                              ),
-                              SizedBox(height: 20),
-                            ],
-                          )
-                        : null,
-                    destinations: HomeTab.values.map((tab) {
-                      return NavigationRailDestination(
-                        icon: Icon(tab.icon),
-                        label: Text(tab.label),
-                      );
-                    }).toList(),
-                  ),
-                Expanded(
-                  child: SafeArea(
-                    left: sizingInformation.isMobile,
-                    child: Stack(
-                      children: [
-                        PageView(
-                          controller: vm.controller,
-                          physics: const NeverScrollableScrollPhysics(),
-                          children: const [
-                            ReceiveTab(),
-                            SendTab(),
-                            SettingsTab(),
-                          ],
-                        ),
-                        if (_dragAndDropIndicator)
-                          Container(
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).scaffoldBackgroundColor,
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
+              extendBody: isAiUi,
+              backgroundColor: isAiUi ? Colors.transparent : null,
+              body: Row(
+                children: [
+                  if (!sizingInformation.isMobile)
+                    NavigationRail(
+                      selectedIndex: vm.currentTab.index,
+                      onDestinationSelected: (index) => vm.changeTab(HomeTab.values[index]),
+                      extended: sizingInformation.isDesktop,
+                      backgroundColor: Theme.of(context).cardColorWithElevation,
+                      leading: sizingInformation.isDesktop
+                          ? const Column(
                               children: [
-                                const Icon(Icons.file_download, size: 128),
-                                const SizedBox(height: 30),
-                                Text(t.sendTab.placeItems, style: Theme.of(context).textTheme.titleLarge),
+                                SizedBox(height: 20),
+                                Text(
+                                  'Local Transfer',
+                                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                                  textAlign: TextAlign.center,
+                                ),
+                                SizedBox(height: 20),
                               ],
-                            ),
+                            )
+                          : null,
+                      destinations: HomeTab.values.map((tab) {
+                        return NavigationRailDestination(
+                          icon: Icon(tab.icon),
+                          label: Text(tab.label),
+                        );
+                      }).toList(),
+                    ),
+                  Expanded(
+                    child: SafeArea(
+                      left: sizingInformation.isMobile,
+                      child: Stack(
+                        children: [
+                          PageView(
+                            controller: vm.controller,
+                            physics: const NeverScrollableScrollPhysics(),
+                            children: const [
+                              ReceiveTab(),
+                              SendTab(),
+                              SettingsTab(),
+                            ],
                           ),
-                      ],
+                          if (_dragAndDropIndicator)
+                            Container(
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).scaffoldBackgroundColor,
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.file_download, size: 128),
+                                  const SizedBox(height: 30),
+                                  Text(t.sendTab.placeItems, style: Theme.of(context).textTheme.titleLarge),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
+              bottomNavigationBar: sizingInformation.isMobile
+                  ? LiquidGlassDock(
+                      selectedIndex: vm.currentTab.index,
+                      onDestinationSelected: (index) => vm.changeTab(HomeTab.values[index]),
+                      destinations: HomeTab.values.map((tab) {
+                        return LiquidGlassDockDestination(icon: tab.icon, label: tab.label);
+                      }).toList(),
+                    )
+                  : null,
             ),
-            bottomNavigationBar: sizingInformation.isMobile
-                ? LiquidGlassDock(
-                    selectedIndex: vm.currentTab.index,
-                    onDestinationSelected: (index) => vm.changeTab(HomeTab.values[index]),
-                    destinations: HomeTab.values.map((tab) {
-                      return LiquidGlassDockDestination(icon: tab.icon, label: tab.label);
-                    }).toList(),
-                  )
-                : null,
-                    ),
           );
         },
       ),

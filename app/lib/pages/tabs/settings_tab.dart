@@ -51,8 +51,9 @@ class SettingsTab extends StatelessWidget {
       provider: (ref) => settingsTabControllerProvider,
       builder: (context, vm) {
         final ref = context.ref;
+        final isAiUi = ref.watch(uiThemeProvider) == UiTheme.aiUi;
         return ResponsiveListView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 20).copyWith(top: 20, bottom: isAiUi ? 110 : 30),
           children: [
             // Page Title: "Settings"
             Text(
@@ -349,20 +350,21 @@ class SettingsTab extends StatelessWidget {
 
             const SizedBox(height: 28),
 
-            // About & Version Info
-            _SettingsPillGroup(
-              children: [
-                _SettingsPillButtonRow(
-                  label: 'Version',
-                  buttonLabel: 'v1.3.6 (Beta 4.1)',
-                  onTap: () => context.push(() => const AboutPage()),
-                ),
-                _SettingsPillButtonRow(
-                  label: t.aboutPage.title,
-                  buttonLabel: 'Local Transfer',
-                  onTap: () => context.push(() => const AboutPage()),
-                ),
-              ],
+            // About & Version Info (Matching photo_6_2026-10-25_23-34-06.jpg)
+            _SettingsPillCard(
+              child: _SettingsPillButtonRow(
+                label: 'Version',
+                buttonLabel: 'v1.3.7 (Beta 4.2)',
+                onTap: () => context.push(() => const AboutPage()),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _SettingsPillCard(
+              child: _SettingsPillButtonRow(
+                label: t.aboutPage.title,
+                buttonLabel: 'Local Transfer',
+                onTap: () => context.push(() => const AboutPage()),
+              ),
             ),
             const SizedBox(height: 50),
           ],
@@ -440,7 +442,7 @@ class _SettingsPillGroup extends StatelessWidget {
               for (int i = 0; i < children.length; i++) ...[
                 if (i > 0)
                   Divider(
-                    color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06),
+                    color: isDark ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.40),
                     height: 1,
                   ),
                 Padding(

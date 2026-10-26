@@ -73,22 +73,22 @@ class _BigButtonState extends State<BigButton> with SingleTickerProviderStateMix
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              borderRadius: BorderRadius.circular(28),
+              borderRadius: BorderRadius.circular(26),
               onTapDown: (_) => _controller.forward(),
               onTapUp: (_) => _controller.reverse(),
               onTapCancel: () => _controller.reverse(),
               onTap: widget.onTap,
               child: Container(
-                width: widget.width ?? 72,
-                height: 96,
+                width: widget.width ?? 70,
+                height: 94,
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0B7F9C),
-                  borderRadius: BorderRadius.circular(28),
+                  color: const Color(0xFF0B7C9E),
+                  borderRadius: BorderRadius.circular(26),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF0B7F9C).withOpacity(0.35),
-                      blurRadius: 12,
+                      color: const Color(0xFF0B7C9E).withOpacity(0.35),
+                      blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
                   ],
@@ -124,55 +124,50 @@ class _BigButtonState extends State<BigButton> with SingleTickerProviderStateMix
           child: child,
         ),
         child: LiquidGlassMaterial(
-          borderRadius: BorderRadius.circular(24),
-          blurSigma: 16,
-          tintColor: isDark ? const Color(0xFF1E2430).withOpacity(0.60) : Colors.white.withOpacity(0.55),
+          borderRadius: BorderRadius.circular(26),
+          blurSigma: 18,
+          tintColor: isDark ? const Color(0xFF1E2430).withOpacity(0.60) : Colors.white.withOpacity(0.68),
           border: Border.all(
-            color: isDark ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.65),
-            width: 1.0,
-          ),
-          shadow: BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.25 : 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: isDark ? Colors.white.withOpacity(0.14) : Colors.white.withOpacity(0.90),
+            width: 1.2,
           ),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(26),
               onTapDown: (_) => _controller.forward(),
               onTapUp: (_) => _controller.reverse(),
               onTapCancel: () => _controller.reverse(),
               onTap: widget.onTap,
               child: Container(
                 width: widget.width,
-                height: 112,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                height: 118,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(widget.icon, size: 28, color: textColor),
+                    Icon(widget.icon, size: 30, color: isDark ? Colors.white : const Color(0xFF1C1E22)),
                     const SizedBox(height: 8),
                     Text(
                       widget.label,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: textColor,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? Colors.white : const Color(0xFF1C1E22),
                       ),
                     ),
                     if (widget.subtitle != null && widget.subtitle!.isNotEmpty) ...[
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 3),
                       Text(
                         widget.subtitle!,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 12,
                           fontWeight: FontWeight.w400,
-                          color: subtitleColor,
+                          color: isDark ? Colors.white60 : const Color(0xFF7E8A9B),
                         ),
                       ),
                     ],

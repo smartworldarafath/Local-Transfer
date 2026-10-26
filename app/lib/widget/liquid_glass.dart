@@ -47,58 +47,62 @@ class LiquidGlassMaterial extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final baseTint =
-        tintColor ?? (isDark ? Colors.white.withOpacity(0.08 * (intensity / 0.75)) : Colors.white.withOpacity(0.90 * (intensity / 0.75)));
+    final baseTint = tintColor ?? (isDark ? const Color(0xFF1E2430).withOpacity(0.60) : Colors.white.withOpacity(0.68));
 
-    // Subtle vertical light gradient if requested, avoiding harsh horizontal color splits
-    final Gradient? gradient = useGradient
-        ? LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color.alphaBlend(
-                isDark ? Colors.white.withOpacity(0.06) : Colors.white.withOpacity(0.12),
-                baseTint,
+    final effectiveBorder =
+        border ??
+        (showSpecularBorder
+            ? Border.all(
+                color: isDark ? Colors.white.withOpacity(0.14) : Colors.white.withOpacity(0.85),
+                width: 1.1,
+              )
+            : null);
+
+    final List<BoxShadow> effectiveShadows = shadow != null
+        ? [shadow!]
+        : [
+            if (isDark) ...[
+              BoxShadow(
+                color: Colors.black.withOpacity(0.40),
+                blurRadius: 18,
+                offset: const Offset(0, 6),
               ),
-              baseTint,
+              BoxShadow(
+                color: Colors.white.withOpacity(0.05),
+                blurRadius: 4,
+                offset: const Offset(0, -1),
+              ),
+            ] else ...[
+              BoxShadow(
+                color: const Color(0xFF0F1E36).withOpacity(0.07),
+                blurRadius: 16,
+                offset: const Offset(0, 5),
+              ),
+              BoxShadow(
+                color: Colors.white.withOpacity(0.80),
+                blurRadius: 5,
+                offset: const Offset(0, -1),
+              ),
             ],
-            stops: const [0.0, 1.0],
-          )
-        : null;
+          ];
 
-    return ClipRRect(
-      borderRadius: borderRadius,
-      child: BackdropFilter(
-        filter: ui.ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: borderRadius,
-            color: gradient == null ? baseTint : null,
-            gradient: gradient,
-            border: showSpecularBorder
-                ? Border.all(
-                    color: isDark ? Colors.white.withOpacity(0.14 * (intensity / 0.75)) : Colors.black.withOpacity(0.08),
-                    width: 1.0,
-                  )
-                : border,
-            boxShadow: shadow != null
-                ? [shadow!]
-                : [
-                    if (isDark)
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.35),
-                        blurRadius: 18,
-                        offset: const Offset(0, 6),
-                      )
-                    else
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
-                        blurRadius: 12,
-                        offset: const Offset(0, 2),
-                      ),
-                  ],
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: borderRadius,
+        boxShadow: effectiveShadows,
+      ),
+      child: ClipRRect(
+        borderRadius: borderRadius,
+        child: BackdropFilter(
+          filter: ui.ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: borderRadius,
+              color: baseTint,
+              border: effectiveBorder,
+            ),
+            child: child,
           ),
-          child: child,
         ),
       ),
     );
@@ -260,12 +264,10 @@ class LiquidGlassDock extends StatelessWidget {
         ? (isDark ? const Color(0xFF1E2430).withOpacity(0.60) : Colors.white.withOpacity(0.65))
         : (isDark ? const Color(0xFF161922).withOpacity(0.92) : Colors.white.withOpacity(0.92));
 
-    final dockBorder = isAiUi
-        ? Border.all(
-            color: isDark ? Colors.white.withOpacity(0.14) : Colors.white.withOpacity(0.70),
-            width: 1.0,
-          )
-        : null;
+    final dockBorder = Border.all(
+      color: isDark ? Colors.white.withOpacity(0.14) : Colors.white.withOpacity(0.85),
+      width: 1.2,
+    );
 
     final activePillColor = isAiUi
         ? (isDark ? const Color(0xFF4C7588) : const Color(0xFF6B8E9F))
@@ -274,13 +276,12 @@ class LiquidGlassDock extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         child: LiquidGlassMaterial(
-          borderRadius: BorderRadius.circular(35),
-          blurSigma: 20,
+          borderRadius: BorderRadius.circular(36),
+          blurSigma: 22,
           tintColor: dockTint,
           border: dockBorder,
-          showSpecularBorder: !isAiUi,
           intensity: 0.95,
           child: Container(
             height: 70,

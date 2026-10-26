@@ -109,7 +109,7 @@ class _ReceiveTabState extends State<ReceiveTab> with SingleTickerProviderStateM
                             },
                             child: const AirDropBeacon(
                               size: 195,
-                              color: Color(0xFF357AF6),
+                              color: Color(0xFF166FFF),
                             ),
                           ),
                         ),
@@ -152,7 +152,7 @@ class _ReceiveTabState extends State<ReceiveTab> with SingleTickerProviderStateM
 
                   // Bottom Pill Button: "🌐 Receive via link"
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 24),
+                    padding: EdgeInsets.only(bottom: context.ref.watch(uiThemeProvider) == UiTheme.aiUi ? 104 : 24),
                     child: Center(
                       child: context.ref.watch(uiThemeProvider) == UiTheme.aiUi
                           ? LiquidGlassMaterial(
@@ -293,16 +293,16 @@ class _CornerButtons extends StatelessWidget {
       if (isAiUi) {
         return LiquidGlassMaterial(
           key: key,
-          borderRadius: BorderRadius.circular(23),
-          blurSigma: 14,
-          tintColor: isDark ? const Color(0xFF1E2430).withOpacity(0.60) : Colors.white.withOpacity(0.65),
+          borderRadius: BorderRadius.circular(22),
+          blurSigma: 16,
+          tintColor: isDark ? const Color(0xFF1E2430).withOpacity(0.60) : Colors.white.withOpacity(0.68),
           border: Border.all(
-            color: isDark ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.65),
-            width: 1.0,
+            color: isDark ? Colors.white.withOpacity(0.14) : Colors.white.withOpacity(0.85),
+            width: 1.1,
           ),
           child: SizedBox(
-            width: 46,
-            height: 46,
+            width: 44,
+            height: 44,
             child: iconBtn,
           ),
         );

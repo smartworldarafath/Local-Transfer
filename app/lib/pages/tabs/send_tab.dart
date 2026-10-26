@@ -68,15 +68,15 @@ class SendTab extends StatelessWidget {
         ].where((opt) => pickerOptions.contains(opt)).toList();
 
         return ResponsiveListView(
-          padding: const EdgeInsets.symmetric(horizontal: _horizontalPadding, vertical: 15),
+          padding: const EdgeInsets.symmetric(horizontal: _horizontalPadding).copyWith(top: 15, bottom: isAiUi ? 110 : 30),
           children: [
             // Header: "Selection"
             Text(
               t.sendTab.selection.title,
               style: TextStyle(
-                fontSize: 34,
-                fontWeight: FontWeight.w700,
-                color: textColor,
+                fontSize: 30,
+                fontWeight: FontWeight.w800,
+                color: isAiUi ? (isDark ? Colors.white : const Color(0xFF181A1F)) : textColor,
                 letterSpacing: -0.5,
               ),
             ),
@@ -89,9 +89,9 @@ class SendTab extends StatelessWidget {
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 0.95,
+                  mainAxisSpacing: 14,
+                  crossAxisSpacing: 14,
+                  childAspectRatio: 0.90,
                 ),
                 itemCount: orderedOptions.length,
                 itemBuilder: (context, index) {
@@ -276,7 +276,7 @@ class SendTab extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: textColor,
+                      color: isAiUi ? (isDark ? Colors.white : const Color(0xFF181A1F)) : textColor,
                     ),
                   ),
                 ),
@@ -451,38 +451,41 @@ class SendTab extends StatelessWidget {
             const SizedBox(height: 16),
 
             // Troubleshoot Pill Button
-            Center(
-              child: isAiUi
-                  ? LiquidGlassMaterial(
-                      borderRadius: BorderRadius.circular(19),
-                      blurSigma: 14,
-                      tintColor: isDark ? const Color(0xFF1E2430).withOpacity(0.60) : Colors.white.withOpacity(0.65),
+            isAiUi
+                ? SizedBox(
+                    width: double.infinity,
+                    height: 46,
+                    child: LiquidGlassMaterial(
+                      borderRadius: BorderRadius.circular(23),
+                      blurSigma: 18,
+                      tintColor: isDark ? const Color(0xFF1E2430).withOpacity(0.60) : Colors.white.withOpacity(0.68),
                       border: Border.all(
-                        color: isDark ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.65),
-                        width: 1.0,
+                        color: isDark ? Colors.white.withOpacity(0.14) : Colors.white.withOpacity(0.85),
+                        width: 1.1,
                       ),
                       child: Material(
                         color: Colors.transparent,
                         child: InkWell(
-                          borderRadius: BorderRadius.circular(19),
+                          borderRadius: BorderRadius.circular(23),
                           onTap: () async {
                             await context.push(() => const TroubleshootPage());
                           },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 9),
+                          child: Center(
                             child: Text(
                               t.troubleshootPage.title,
                               style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: textColor,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.white : const Color(0xFF2C3545),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    )
-                  : Container(
+                    ),
+                  )
+                : Center(
+                    child: Container(
                       height: 38,
                       decoration: BoxDecoration(
                         color: isDark ? const Color(0xFF2C3545) : const Color(0xFFDCE2EE),
@@ -511,7 +514,7 @@ class SendTab extends StatelessWidget {
                         ),
                       ),
                     ),
-            ),
+                  ),
 
             const SizedBox(height: 20),
 
@@ -527,7 +530,8 @@ class SendTab extends StatelessWidget {
                       t.sendTab.help,
                       style: TextStyle(
                         fontSize: 13,
-                        color: textColor.withOpacity(0.65),
+                        color: isAiUi ? (isDark ? Colors.white60 : const Color(0xFF5A6677)) : textColor.withOpacity(0.65),
+                        height: 1.4,
                       ),
                       textAlign: TextAlign.center,
                     ),
