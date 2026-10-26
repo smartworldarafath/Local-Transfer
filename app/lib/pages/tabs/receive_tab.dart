@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:localsend_app/gen/strings.g.dart';
 import 'package:localsend_app/model/state/server/server_state.dart';
+import 'package:localsend_app/pages/group/group_receive_page.dart';
 import 'package:localsend_app/pages/receive_history_page.dart';
 import 'package:localsend_app/pages/web_share_page.dart';
 import 'package:localsend_app/provider/animation_provider.dart';
@@ -150,100 +151,199 @@ class _ReceiveTabState extends State<ReceiveTab> with SingleTickerProviderStateM
                     ),
                   ),
 
-                  // Bottom Pill Button: "🌐 Receive via link"
+                  // Bottom Action Buttons: Group Receive & Receive via link
                   Padding(
                     padding: EdgeInsets.only(bottom: context.ref.watch(uiThemeProvider) == UiTheme.aiUi ? 104 : 24),
                     child: Center(
-                      child: context.ref.watch(uiThemeProvider) == UiTheme.aiUi
-                          ? LiquidGlassMaterial(
-                              borderRadius: BorderRadius.circular(29),
-                              blurSigma: 16,
-                              tintColor: isDark ? const Color(0xFF1E2430).withOpacity(0.60) : Colors.white.withOpacity(0.65),
-                              border: Border.all(
-                                color: isDark ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.65),
-                                width: 1.0,
-                              ),
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Group Receive Pill Button
+                          context.ref.watch(uiThemeProvider) == UiTheme.aiUi
+                              ? LiquidGlassMaterial(
                                   borderRadius: BorderRadius.circular(29),
-                                  onTap: () async {
-                                    await context.push(() => const WebSharePage());
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.language,
-                                          color: isDark ? Colors.white : Colors.black87,
-                                          size: 22,
+                                  blurSigma: 16,
+                                  tintColor: isDark ? const Color(0xFF1E2430).withOpacity(0.60) : Colors.white.withOpacity(0.65),
+                                  border: Border.all(
+                                    color: isDark ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.65),
+                                    width: 1.0,
+                                  ),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(29),
+                                      onTap: () async {
+                                        await context.push(() => const GroupReceivePage());
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(
+                                              Icons.groups_rounded,
+                                              color: Color(0xFF166FFF),
+                                              size: 22,
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Text(
+                                              'Group Receive',
+                                              style: TextStyle(
+                                                color: isDark ? Colors.white : Colors.black87,
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                        const SizedBox(width: 12),
-                                        Text(
-                                          t.receiveTab.link,
-                                          style: TextStyle(
-                                            color: isDark ? Colors.white : Colors.black87,
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 16,
-                                          ),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : Container(
+                                  height: 58,
+                                  decoration: BoxDecoration(
+                                    color: isDark ? const Color(0xFF1E2430) : const Color(0xFFE9EDF5),
+                                    borderRadius: BorderRadius.circular(29),
+                                    border: Border.all(
+                                      color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06),
+                                      width: 1,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(isDark ? 0.35 : 0.06),
+                                        blurRadius: 16,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(29),
+                                      onTap: () async {
+                                        await context.push(() => const GroupReceivePage());
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 28),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(
+                                              Icons.groups_rounded,
+                                              color: Color(0xFF166FFF),
+                                              size: 22,
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Text(
+                                              'Group Receive',
+                                              style: TextStyle(
+                                                color: isDark ? Colors.white : Colors.black87,
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ],
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            )
-                          : Container(
-                              height: 58,
-                              decoration: BoxDecoration(
-                                color: isDark ? const Color(0xFF1E2430) : const Color(0xFFE9EDF5),
-                                borderRadius: BorderRadius.circular(29),
-                                border: Border.all(
-                                  color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06),
-                                  width: 1,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(isDark ? 0.35 : 0.06),
-                                    blurRadius: 16,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
+                          const SizedBox(height: 12),
+
+                          // Receive via link Pill Button
+                          context.ref.watch(uiThemeProvider) == UiTheme.aiUi
+                              ? LiquidGlassMaterial(
                                   borderRadius: BorderRadius.circular(29),
-                                  onTap: () async {
-                                    await context.push(() => const WebSharePage());
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 28),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.language,
-                                          color: isDark ? Colors.white : Colors.black87,
-                                          size: 22,
+                                  blurSigma: 16,
+                                  tintColor: isDark ? const Color(0xFF1E2430).withOpacity(0.60) : Colors.white.withOpacity(0.65),
+                                  border: Border.all(
+                                    color: isDark ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.65),
+                                    width: 1.0,
+                                  ),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(29),
+                                      onTap: () async {
+                                        await context.push(() => const WebSharePage());
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.language,
+                                              color: isDark ? Colors.white : Colors.black87,
+                                              size: 22,
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Text(
+                                              t.receiveTab.link,
+                                              style: TextStyle(
+                                                color: isDark ? Colors.white : Colors.black87,
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                        const SizedBox(width: 12),
-                                        Text(
-                                          t.receiveTab.link,
-                                          style: TextStyle(
-                                            color: isDark ? Colors.white : Colors.black87,
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 16,
-                                          ),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : Container(
+                                  height: 58,
+                                  decoration: BoxDecoration(
+                                    color: isDark ? const Color(0xFF1E2430) : const Color(0xFFE9EDF5),
+                                    borderRadius: BorderRadius.circular(29),
+                                    border: Border.all(
+                                      color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06),
+                                      width: 1,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(isDark ? 0.35 : 0.06),
+                                        blurRadius: 16,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(29),
+                                      onTap: () async {
+                                        await context.push(() => const WebSharePage());
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 28),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.language,
+                                              color: isDark ? Colors.white : Colors.black87,
+                                              size: 22,
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Text(
+                                              t.receiveTab.link,
+                                              style: TextStyle(
+                                                color: isDark ? Colors.white : Colors.black87,
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ],
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ],

@@ -325,7 +325,7 @@ class AppUpdateNotifier extends Notifier<AppUpdateState> {
         throw Exception('Unable to reach update servers. Please check your internet connection.');
       }
 
-      final currentVersionCombined = ref.read(versionProvider).data?.combinedString ?? 'v1.3.7 (Beta 4.2)';
+      final currentVersionCombined = ref.read(versionProvider).data?.combinedString ?? 'v1.4.0 (Stable)';
       final isNewer = _isVersionGreater(latest.tagName, currentVersionCombined);
 
       if (isNewer) {
