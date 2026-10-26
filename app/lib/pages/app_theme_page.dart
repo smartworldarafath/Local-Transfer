@@ -4,6 +4,9 @@ import 'package:localsend_app/pages/home_page.dart';
 import 'package:localsend_app/pages/home_page_controller.dart';
 import 'package:localsend_app/provider/background_look_provider.dart';
 import 'package:localsend_app/provider/settings_provider.dart';
+import 'package:localsend_app/provider/ui_theme_provider.dart';
+import 'package:localsend_app/widget/ai_ui_background.dart';
+import 'package:localsend_app/widget/dialogs/ai_ui_preview_dialog.dart';
 import 'package:localsend_app/widget/dialogs/custom_color_dialog.dart';
 import 'package:localsend_app/widget/liquid_glass.dart';
 import 'package:localsend_app/widget/responsive_builder.dart';
@@ -19,8 +22,7 @@ class AppThemePage extends StatefulWidget {
 }
 
 class _AppThemePageState extends State<AppThemePage> with Refena {
-  // Selected UI Theme option (One UI is active by default)
-  String _selectedUiTheme = 'One Ui';
+
 
   String _getColorModeName(ColorMode mode) {
     switch (mode) {
@@ -156,13 +158,23 @@ class _AppThemePageState extends State<AppThemePage> with Refena {
 
     final backgroundLook = ref.watch(backgroundLookProvider);
 
-    // Card background color matching One UI
-    final cardColor = isDark ? const Color(0xFF1E222B) : Colors.white;
-    final cardBorder = isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.04);
-    final rowBg = isDark ? Colors.white.withOpacity(0.05) : const Color(0xFFF6F8FA);
+    final activeUiTheme = ref.watch(uiThemeProvider);
+    final isAiUi = activeUiTheme == UiTheme.aiUi;
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+    // Card background color matching One UI / AI UI
+    final cardColor = isAiUi
+        ? (isDark ? Colors.white.withOpacity(0.08) : Colors.white.withOpacity(0.70))
+        : (isDark ? const Color(0xFF1E222B) : Colors.white);
+    final cardBorder = isAiUi
+        ? (isDark ? Colors.white.withOpacity(0.14) : Colors.white.withOpacity(0.60))
+        : (isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.04));
+    final rowBg = isAiUi
+        ? (isDark ? Colors.white.withOpacity(0.06) : Colors.white.withOpacity(0.55))
+        : (isDark ? Colors.white.withOpacity(0.05) : const Color(0xFFF6F8FA));
+
+    return AiUiContainer(
+      child: Scaffold(
+        backgroundColor: isAiUi ? Colors.transparent : theme.scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -533,13 +545,15 @@ class _AppThemePageState extends State<AppThemePage> with Refena {
                       ),
                     ),
                   ),
-                  selected: _selectedUiTheme == 'Ai Ui',
+                  selected: activeUiTheme == UiTheme.aiUi,
                   rowBg: rowBg,
                   textColor: textColor,
                   onTap: () {
-                    _showComingSoonDialog(
-                      title: 'AI UI',
-                      message: 'AI UI is currently in development and will be available in an upcoming update.',
+                    AiUiPreviewDialog.show(
+                      context,
+                      onApply: () async {
+                        await ref.notifier(uiThemeProvider).setUiTheme(UiTheme.aiUi);
+                      },
                     );
                   },
                 ),
@@ -557,13 +571,11 @@ class _AppThemePageState extends State<AppThemePage> with Refena {
                     ),
                     child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 24),
                   ),
-                  selected: _selectedUiTheme == 'One Ui',
+                  selected: activeUiTheme == UiTheme.oneUi,
                   rowBg: rowBg,
                   textColor: textColor,
-                  onTap: () {
-                    setState(() {
-                      _selectedUiTheme = 'One Ui';
-                    });
+                  onTap: () async {
+                    await ref.notifier(uiThemeProvider).setUiTheme(UiTheme.oneUi);
                   },
                 ),
                 const SizedBox(height: 10),
@@ -591,7 +603,7 @@ class _AppThemePageState extends State<AppThemePage> with Refena {
                     ),
                     child: const Icon(Icons.water_drop_rounded, color: Colors.white, size: 24),
                   ),
-                  selected: _selectedUiTheme == 'Liquid Glass',
+                  selected: activeUiTheme == UiTheme.liquidGlass,
                   rowBg: rowBg,
                   textColor: textColor,
                   onTap: () {
@@ -784,8 +796,9 @@ class _AppThemePageState extends State<AppThemePage> with Refena {
             destinations: HomeTab.values.map((tab) {
               return LiquidGlassDockDestination(icon: tab.icon, label: tab.label);
             }).toList(),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

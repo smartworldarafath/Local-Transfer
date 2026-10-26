@@ -312,7 +312,7 @@ class AppUpdateNotifier extends Notifier<AppUpdateState> {
         throw Exception('Unable to reach update servers. Please check your internet connection.');
       }
 
-      final currentVersionCombined = ref.read(versionProvider).data?.combinedString ?? 'v1.3.0 (Beta 3)';
+      final currentVersionCombined = ref.read(versionProvider).data?.combinedString ?? 'v1.3.5 (Beta 4)';
       final isNewer = _isVersionGreater(latest.tagName, currentVersionCombined);
 
       if (isNewer) {
@@ -356,8 +356,13 @@ class AppUpdateNotifier extends Notifier<AppUpdateState> {
         if (rMajor != cMajor) return rMajor > cMajor;
         if (rMinor != cMinor) return rMinor > cMinor;
         if (rPatch != cPatch) return rPatch > cPatch;
+      } else if (matchRemote != null && matchCurrent == null) {
+        return true;
+      } else if (matchRemote == null) {
+        return false;
       }
 
+      // If Major.Minor.Patch are identical, check beta version numbers
       final betaRegex = RegExp(r'beta[^\d]*(\d+(?:\.\d+)?)', caseSensitive: false);
       final remoteBeta = betaRegex.firstMatch(remote)?.group(1);
       final currentBeta = betaRegex.firstMatch(current)?.group(1);
@@ -365,16 +370,19 @@ class AppUpdateNotifier extends Notifier<AppUpdateState> {
       if (remoteBeta != null && currentBeta != null) {
         final rB = double.tryParse(remoteBeta) ?? 0.0;
         final cB = double.tryParse(currentBeta) ?? 0.0;
-        if (rB != cB) return rB > cB;
+        return rB > cB;
       } else if (remoteBeta == null && currentBeta != null) {
+        // Remote is full release, current is beta -> remote is newer!
         return true;
       } else if (remoteBeta != null && currentBeta == null) {
+        // Remote is beta, current is full release -> remote is older!
         return false;
       }
 
-      return remote.trim() != current.trim();
+      // Both versions are identical in semver and beta stage -> NOT newer!
+      return false;
     } catch (_) {
-      return remote.trim() != current.trim();
+      return false;
     }
   }
 

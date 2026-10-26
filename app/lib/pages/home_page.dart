@@ -10,7 +10,9 @@ import 'package:localsend_app/pages/tabs/receive_tab.dart';
 import 'package:localsend_app/pages/tabs/send_tab.dart';
 import 'package:localsend_app/pages/tabs/settings_tab.dart';
 import 'package:localsend_app/provider/selection/selected_sending_files_provider.dart';
+import 'package:localsend_app/provider/ui_theme_provider.dart';
 import 'package:localsend_app/util/native/cross_file_converters.dart';
+import 'package:localsend_app/widget/ai_ui_background.dart';
 import 'package:localsend_app/widget/liquid_glass.dart';
 import 'package:localsend_app/widget/responsive_builder.dart';
 import 'package:refena_flutter/refena_flutter.dart';
@@ -106,7 +108,9 @@ class _HomePageState extends State<HomePage> with Refena {
       },
       child: ResponsiveBuilder(
         builder: (sizingInformation) {
-          return Scaffold(
+          return AiUiContainer(
+            child: Scaffold(
+              backgroundColor: context.ref.watch(uiThemeProvider) == UiTheme.aiUi ? Colors.transparent : null,
             body: Row(
               children: [
                 if (!sizingInformation.isMobile)
@@ -179,6 +183,7 @@ class _HomePageState extends State<HomePage> with Refena {
                     }).toList(),
                   )
                 : null,
+                    ),
           );
         },
       ),

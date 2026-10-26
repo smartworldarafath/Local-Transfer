@@ -19,7 +19,7 @@ on:
       release_tag:
         description: "Release tag"
         required: true
-        default: "v1.3.0-beta3"
+        default: "v1.3.5-beta4"
         type: string
 
 permissions:
@@ -76,14 +76,14 @@ jobs:
       - name: Package & Rename APK
         run: |
           mkdir -p build_output/android
-          TAG="${{ github.event.inputs.release_tag || 'v1.3.0-beta3' }}"
+          TAG="${{ github.event.inputs.release_tag || 'v1.3.5-beta4' }}"
           cp app/build/app/outputs/flutter-apk/app-release.apk "build_output/android/LocalTransfer-${TAG}.apk"
 
       - name: Upload Android to Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG="${{ github.event.inputs.release_tag || 'v1.3.0-beta3' }}"
+          TAG="${{ github.event.inputs.release_tag || 'v1.3.5-beta4' }}"
           gh release upload "$TAG" "build_output/android/LocalTransfer-${TAG}.apk" --clobber --repo smartworldarafath/Local-Transfer
 
   # 2. Windows x64 Portable Zip & Installer
@@ -119,7 +119,7 @@ jobs:
 
       - name: Package Windows ZIP & Installer
         run: |
-          $tag = "${{ github.event.inputs.release_tag || 'v1.3.0-beta3' }}"
+          $tag = "${{ github.event.inputs.release_tag || 'v1.3.5-beta4' }}"
           New-Item -ItemType Directory -Force -Path "build_output\windows" | Out-Null
           Compress-Archive -Path "app\build\windows\x64\runner\Release\*" -DestinationPath "build_output\windows\LocalTransfer-$tag-windows-x64.zip" -Force
           New-Item -ItemType Directory -Force -Path "${{ runner.temp }}\inno" | Out-Null
@@ -134,7 +134,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          $tag = "${{ github.event.inputs.release_tag || 'v1.3.0-beta3' }}"
+          $tag = "${{ github.event.inputs.release_tag || 'v1.3.5-beta4' }}"
           gh release upload "$tag" "build_output\windows\LocalTransfer-$tag-windows-x64.zip" "build_output\windows\LocalTransfer-$tag-windows-x64.exe" --clobber --repo smartworldarafath/Local-Transfer
 
   # 3. Linux AppImage & Tar.gz (x86_64)
@@ -169,7 +169,7 @@ jobs:
 
       - name: Package Linux Tar.gz & AppImage
         run: |
-          TAG="${{ github.event.inputs.release_tag || 'v1.3.0-beta3' }}"
+          TAG="${{ github.event.inputs.release_tag || 'v1.3.5-beta4' }}"
           mkdir -p build_output/linux
           tar -czf "build_output/linux/LocalTransfer-${TAG}-linux-x86_64.tar.gz" -C app/build/linux/x64/release/bundle .
 
@@ -203,7 +203,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG="${{ github.event.inputs.release_tag || 'v1.3.0-beta3' }}"
+          TAG="${{ github.event.inputs.release_tag || 'v1.3.5-beta4' }}"
           gh release upload "$TAG" "build_output/linux/LocalTransfer-${TAG}-linux-x86_64.tar.gz" "build_output/linux/LocalTransfer-${TAG}-linux-x86_64.AppImage" --clobber --repo smartworldarafath/Local-Transfer
 
   # 4. macOS DMG & Zip (unsigned standalone)
@@ -246,7 +246,7 @@ jobs:
 
       - name: Package macOS DMG & Zip
         run: |
-          TAG="${{ github.event.inputs.release_tag || 'v1.3.0-beta3' }}"
+          TAG="${{ github.event.inputs.release_tag || 'v1.3.5-beta4' }}"
           brew install create-dmg || true
           mkdir -p "$GITHUB_WORKSPACE/build_output/macos"
           cd "$GITHUB_WORKSPACE/app/build/macos/Build/Products/Release"
@@ -271,7 +271,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG="${{ github.event.inputs.release_tag || 'v1.3.0-beta3' }}"
+          TAG="${{ github.event.inputs.release_tag || 'v1.3.5-beta4' }}"
           gh release upload "$TAG" "$GITHUB_WORKSPACE/build_output/macos/LocalTransfer-${TAG}-macos.zip" "$GITHUB_WORKSPACE/build_output/macos/LocalTransfer-${TAG}-macos.dmg" --clobber --repo smartworldarafath/Local-Transfer
 
   # 5. iOS & iPadOS IPA (Sideload payload)
@@ -313,7 +313,7 @@ jobs:
 
       - name: Package Payload IPA
         run: |
-          TAG="${{ github.event.inputs.release_tag || 'v1.3.0-beta3' }}"
+          TAG="${{ github.event.inputs.release_tag || 'v1.3.5-beta4' }}"
           mkdir -p build_output/ios/Payload
           cp -r app/build/ios/iphoneos/Runner.app build_output/ios/Payload/
           cd build_output/ios
@@ -324,5 +324,5 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG="${{ github.event.inputs.release_tag || 'v1.3.0-beta3' }}"
+          TAG="${{ github.event.inputs.release_tag || 'v1.3.5-beta4' }}"
           gh release upload "$TAG" "build_output/ios/LocalTransfer-${TAG}-ios-universal.ipa" --clobber --repo smartworldarafath/Local-Transfer
